@@ -141,9 +141,15 @@ namespace KerbalJointReinforcement
             {
                 Debug.Log("KJR: Vessel has launch clamps and is not PRELAUNCH: Moving back to PRELAUNCH");
                 v.situation = Vessel.Situations.PRELAUNCH;
-                v.skipGroundPositioning = false;
                 v.launchTime = 0;
                 v.missionTime = 0;
+
+                if (Versioning.version_minor > 3)
+                {
+                    // The following field didn't exist pre KSP v1.4
+                    var fInf = v.GetType().GetField("skipGroundPositioning");
+                    fInf.SetValue(v, false);
+                }
             }
         }
 
