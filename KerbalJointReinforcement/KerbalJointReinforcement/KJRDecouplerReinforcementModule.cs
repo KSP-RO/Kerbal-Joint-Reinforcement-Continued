@@ -70,7 +70,7 @@ namespace KerbalJointReinforcement
                     continue;
 
                 if (KJRJointUtils.settings.debug)
-                    Debug.Log($"Decoupling part {part.partInfo.title}; destroying all extra joints");
+                    Debug.Log($"[KJR] Decoupling part {part.partInfo.title}; destroying all extra joints");
 
                 BreakAllInvalidJointsAndRebuild();
                 break;

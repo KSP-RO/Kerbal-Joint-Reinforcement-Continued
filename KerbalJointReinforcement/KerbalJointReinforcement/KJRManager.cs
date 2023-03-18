@@ -142,7 +142,7 @@ namespace KerbalJointReinforcement
             RunVesselJointUpdateFunction(v);
             if (!vesselOffRails.Contains(v) && v.precalc.isEasingGravity)
             {
-                Debug.Log("KJR easing " + v.vesselName);
+                Debug.Log("[KJR] easing " + v.vesselName);
                 vesselOffRails.Add(v);
                 List<Joint> jointList = new List<Joint>();
                 for (int i = 0; i < v.Parts.Count; ++i)
@@ -185,7 +185,7 @@ namespace KerbalJointReinforcement
             // if we had launch clamps and our situation is not PRELAUNCH then assume some physics issue has bounced us into landed or flying situation.
             if (vesselHasLaunchClamps && v.situation != Vessel.Situations.PRELAUNCH)
             {
-                Debug.Log("KJR: Vessel has launch clamps and is not PRELAUNCH: Moving back to PRELAUNCH");
+                Debug.Log("[KJR] Vessel has launch clamps and is not PRELAUNCH: Moving back to PRELAUNCH");
                 v.situation = Vessel.Situations.PRELAUNCH;
                 v.launchTime = 0;
                 v.missionTime = 0;
@@ -245,7 +245,7 @@ namespace KerbalJointReinforcement
         {
             if (KJRJointUtils.settings.debug)
             {
-                Debug.Log($"KJR: Processing vessel {v.id} ({v.GetName()}); root {v.rootPart.partInfo.name} ({v.rootPart.flightID})");
+                Debug.Log($"[KJR] Processing vessel {v.id} ({v.GetName()}); root {v.rootPart.partInfo.name} ({v.rootPart.flightID})");
             }
 
             bool child_parts = false;
@@ -279,7 +279,7 @@ namespace KerbalJointReinforcement
                     p.breakingTorque = Mathf.Infinity;
                     p.mass = Mathf.Max(p.mass, (p.parent.mass + p.parent.GetResourceMass()) * 0.01f);          //We do this to make sure that there is a mass ratio of 100:1 between the clamp and what it's connected to.  This helps counteract some of the wobbliness simply, but also allows some give and springiness to absorb the initial physics kick
                     if (KJRJointUtils.settings.debug)
-                        Debug.Log("KJR: Launch Clamp Break Force / Torque increased");
+                        Debug.Log("[KJR] Launch Clamp Break Force / Torque increased");
 
                     if (!p.Modules.Contains<KJRLaunchClampReinforcementModule>())
                         KJRJointUtils.AddLaunchClampReinforcementModule(p);
@@ -333,7 +333,7 @@ namespace KerbalJointReinforcement
             {
                 if (KJRJointUtils.settings.debug)
                 {
-                    Debug.Log($"KJR: Already processed part before: {p.partInfo.name} ({p.flightID}) -> {p.parent.partInfo.name} ({p.parent.flightID})");
+                    Debug.Log($"[KJR] Already processed part before: {p.partInfo.name} ({p.flightID}) -> {p.parent.partInfo.name} ({p.parent.flightID})");
                 }
 
                 return;
@@ -400,7 +400,7 @@ namespace KerbalJointReinforcement
                 {
                     if (KJRJointUtils.settings.debug)
                     {
-                        Debug.Log($"KJR: Part mass too low, skipping: {p.partInfo.name} ({p.flightID})");
+                        Debug.Log($"[KJR] Part mass too low, skipping: {p.partInfo.name} ({p.flightID})");
                     }
 
                     continue;
@@ -417,7 +417,7 @@ namespace KerbalJointReinforcement
                     var dock1 = p.Modules.GetModule<ModuleDockingNode>();
                     var dock2 = p.parent.Modules.GetModule<ModuleDockingNode>();
 
-                    //Debug.Log(dock1 + " " + (dock1 ? ""+dock1.dockedPartUId : "?") + " " + dock2 + " " + (dock2 ? ""+dock2.dockedPartUId : "?"));
+                    //Debug.Log($"[KJR] {dock1} {(dock1 ? ""+dock1.dockedPartUId : "?")} {dock2} {(dock2 ? ""+dock2.dockedPartUId : "?")}");
 
                     if (dock1 && dock2 && (dock1.dockedPartUId == p.parent.flightID || dock2.dockedPartUId == p.flightID))
                     {

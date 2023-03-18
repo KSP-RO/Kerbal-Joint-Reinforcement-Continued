@@ -139,7 +139,7 @@ namespace KerbalJointReinforcement
                                 {
                                     newAdditions.Add(q);
                                     if (settings.debug)
-                                        Debug.Log($"Part {q.partInfo.title} added to list due to mass ratio difference");
+                                        Debug.Log($"[KJR] Part {q.partInfo.title} added to list due to mass ratio difference");
                                 }
                             }
                         }
@@ -155,7 +155,7 @@ namespace KerbalJointReinforcement
                     {
                         newAdditions.Add(p.parent);
                         if (settings.debug)
-                            Debug.Log($"Part {p.parent.partInfo.title} added to list due to mass ratio difference");
+                            Debug.Log($"[KJR] Part {p.parent.partInfo.title} added to list due to mass ratio difference");
                     }
                 }
             }
@@ -196,7 +196,7 @@ namespace KerbalJointReinforcement
                 maxMass += (float)(r.info.density * r.maxAmount);
             }
             if (settings.debug)
-                Debug.Log($"Maximum mass for part {p.partInfo.title} is {maxMass}");
+                Debug.Log($"[KJR] Maximum mass for part {p.partInfo.title} is {maxMass}");
             return maxMass;
         }
 
@@ -205,7 +205,7 @@ namespace KerbalJointReinforcement
             var pm = (KJRDecouplerReinforcementModule)p.AddModule(nameof(KJRDecouplerReinforcementModule));
             pm.OnPartUnpack();
             if (settings.debug)
-                Debug.Log("Added KJRDecouplerReinforcementModule to part " + p.partInfo.title);
+                Debug.Log("[KJR] Added KJRDecouplerReinforcementModule to part " + p.partInfo.title);
         }
 
         public static void AddLaunchClampReinforcementModule(Part p)
@@ -214,7 +214,7 @@ namespace KerbalJointReinforcement
             pm.clampJointHasInfiniteStrength = settings.clampJointHasInfiniteStrength;
             pm.OnPartUnpack();
             if (settings.debug)
-                Debug.Log("Added KJRLaunchClampReinforcementModule to part " + p.partInfo.title);
+                Debug.Log("[KJR] Added KJRLaunchClampReinforcementModule to part " + p.partInfo.title);
         }
 
         public static void LoadConstants()
@@ -360,11 +360,11 @@ namespace KerbalJointReinforcement
 
             if (maxBounds == new Vector3(-100, -100, -100) && minBounds == new Vector3(100, 100, 100))
             {
-                Debug.LogWarning("KerbalJointReinforcement: extents could not be properly built for part " + p.partInfo.title);
+                Debug.LogWarning("[KJR] extents could not be properly built for part " + p.partInfo.title);
                 maxBounds = minBounds = Vector3.zero;
             }
             else if (settings.debug)
-                Debug.Log($"Extents: {minBounds} .. {maxBounds} = {maxBounds - minBounds}");
+                Debug.Log($"[KJR] Extents: {minBounds} .. {maxBounds} = {maxBounds - minBounds}");
 
             //attachNodeLoc = p.transform.worldToLocalMatrix.MultiplyVector(p.parent.transform.position - p.transform.position);
             return maxBounds - minBounds;

@@ -48,7 +48,7 @@ namespace KerbalJointReinforcement
 
         public void OnDestroy()
         {
-            Debug.Log("KJRMultiJointManager cleanup");
+            Debug.Log("[KJR] KJRMultiJointManager cleanup");
             GameEvents.onVesselCreate.Remove(VesselCreate);
             GameEvents.onPartUndock.Remove(OnJointBreak);
             GameEvents.onPartDie.Remove(OnJointBreak);
@@ -58,7 +58,7 @@ namespace KerbalJointReinforcement
         //Therefore, we only need to use vessel.RootPart and the parts with no children to ensure that all multijoints are broken
         private void VesselCreate(Vessel v)
         {
-            //Debug.Log(v.name + " joint break");
+            //Debug.Log($"[KJR] {v.name} joint break");
             OnJointBreak(v.rootPart);
 
             for (int i = 0; i < v.Parts.Count; ++i)

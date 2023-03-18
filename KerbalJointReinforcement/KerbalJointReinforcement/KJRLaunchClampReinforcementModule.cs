@@ -227,7 +227,7 @@ namespace KerbalJointReinforcement
 
             // Adding a joint that connects the parent part to itself. 
             // This causes Unity to bug out slightly and the connection between clamp and it's parent becomes completely rigid.
-            Debug.Log("[KJR]: Ignore the illegal joint error below, this is supposed to happen: ");
+            Debug.Log("[KJR] Ignore the illegal joint error below, this is supposed to happen: ");
             ConfigurableJoint newJoint = parentOfClamp.gameObject.AddComponent<ConfigurableJoint>();
             newJoint.connectedBody = parentOfClamp.rb;
             newJoint.anchor = anchor;
