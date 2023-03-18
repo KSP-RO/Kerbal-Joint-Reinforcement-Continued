@@ -114,7 +114,6 @@ namespace KerbalJointReinforcement
             }
 
             updatedVessels.Remove(v);
-            RunVesselJointUpdateFunction(v);
             StartCoroutine(RunVesselJointUpdateFunctionWhenSafe(v));
         }
 
