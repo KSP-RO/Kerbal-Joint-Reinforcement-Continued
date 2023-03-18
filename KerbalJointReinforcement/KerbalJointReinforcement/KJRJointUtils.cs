@@ -18,13 +18,9 @@ Copyright 2015, Michael Ferrara, aka Ferram4
     along with Kerbal Joint Reinforcement.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Reflection;
 using UnityEngine;
-using KSP;
-using KSP.IO;
 
 namespace KerbalJointReinforcement
 {
@@ -51,12 +47,12 @@ namespace KerbalJointReinforcement
             return partJoint.joints;
         }
 
-        public static bool JointAdjustmentValid(Part p)
+        public static bool IsJointAdjustmentValid(Part p)
         {
             for (int i = 0; i < p.Modules.Count; i++)
             {
                 var pm = p.Modules[i];
-                if ((pm is IJointLockState jls) && jls.IsJointUnlocked() || settings.exemptModuleTypes.Contains(pm.ClassName))
+                if (pm is IJointLockState jls && jls.IsJointUnlocked() || settings.exemptModuleTypes.Contains(pm.ClassName))
                     return false;
             }
 
@@ -75,20 +71,25 @@ namespace KerbalJointReinforcement
             string typeString = p.GetType().ToString();
 
             foreach (string s in settings.decouplerStiffeningExtensionType)
+            {
                 if (typeString == s)
                 {
                     return true;
                 }
+            }
+
             foreach (string s in settings.decouplerStiffeningExtensionType)
+            {
                 if (p.Modules.Contains(s))
                 {
                     return true;
                 }
+            }
 
             return false;
         }
 
-        public static List<Part> DecouplerPartStiffeningList(Part p, bool childrenNotParent, bool onlyAddLastPart)
+        public static List<Part> GetDecouplerPartStiffeningList(Part p, bool childrenNotParent, bool onlyAddLastPart)
         {
             List<Part> tmpPartList = new List<Part>();
             bool extend = false;
@@ -106,18 +107,17 @@ namespace KerbalJointReinforcement
                     if (p.children != null)
                     {
                         foreach (Part q in p.children)
+                        {
                             if (q != null && q.parent == p)
                             {
-                                newAdditions.AddRange(DecouplerPartStiffeningList(q, childrenNotParent, onlyAddLastPart));
+                                newAdditions.AddRange(GetDecouplerPartStiffeningList(q, childrenNotParent, onlyAddLastPart));
                             }
+                        }
                     }
                 }
-                else
+                else if (p.parent)
                 {
-                    if (p.parent)
-                    {
-                        newAdditions.AddRange(DecouplerPartStiffeningList(p.parent, childrenNotParent, onlyAddLastPart));
-                    }
+                    newAdditions.AddRange(GetDecouplerPartStiffeningList(p.parent, childrenNotParent, onlyAddLastPart));
                 }
             }
             else
@@ -126,11 +126,11 @@ namespace KerbalJointReinforcement
                 if (childrenNotParent)
                 {
                     if (p.children != null)
+                    {
                         foreach (Part q in p.children)
                         {
                             if (q != null && q.parent == p)
                             {
-
                                 float massRatio = MaximumPossiblePartMass(q) / thisPartMaxMass;
                                 //if (massRatio < 1)
                                 //    massRatio = 1 / massRatio;
@@ -139,25 +139,23 @@ namespace KerbalJointReinforcement
                                 {
                                     newAdditions.Add(q);
                                     if (settings.debug)
-                                        Debug.Log("Part " + q.partInfo.title + " added to list due to mass ratio difference");
+                                        Debug.Log($"Part {q.partInfo.title} added to list due to mass ratio difference");
                                 }
                             }
                         }
+                    }
                 }
-                else
+                else if (p.parent)
                 {
-                    if (p.parent)
-                    {
-                        float massRatio = MaximumPossiblePartMass(p.parent) / thisPartMaxMass;
-                        //if (massRatio < 1)
-                        //    massRatio = 1 / massRatio;
+                    float massRatio = MaximumPossiblePartMass(p.parent) / thisPartMaxMass;
+                    //if (massRatio < 1)
+                    //    massRatio = 1 / massRatio;
 
-                        if (massRatio > settings.stiffeningExtensionMassRatioThreshold)
-                        {
-                            newAdditions.Add(p.parent);
-                            if (settings.debug)
-                                Debug.Log("Part " + p.parent.partInfo.title + " added to list due to mass ratio difference");
-                        }
+                    if (massRatio > settings.stiffeningExtensionMassRatioThreshold)
+                    {
+                        newAdditions.Add(p.parent);
+                        if (settings.debug)
+                            Debug.Log($"Part {p.parent.partInfo.title} added to list due to mass ratio difference");
                     }
                 }
             }
@@ -166,7 +164,7 @@ namespace KerbalJointReinforcement
             else if (onlyAddLastPart)
                 extend = false;
 
-            if (!(onlyAddLastPart && extend))
+            if (!onlyAddLastPart || !extend)
                 tmpPartList.Add(p);
 
             return tmpPartList;
@@ -176,9 +174,8 @@ namespace KerbalJointReinforcement
         {
             float breakForce = Mathf.Infinity;
             float breakTorque = Mathf.Infinity;
-            FixedJoint newJoint;
 
-            newJoint = clamp.gameObject.AddComponent<FixedJoint>();
+            FixedJoint newJoint = clamp.gameObject.AddComponent<FixedJoint>();
 
             newJoint.connectedBody = null;
             newJoint.anchor = Vector3.zero;
@@ -191,7 +188,6 @@ namespace KerbalJointReinforcement
             //newJoint.angularXMotion = newJoint.angularYMotion = newJoint.angularZMotion = ConfigurableJointMotion.Locked;
         }
 
-
         public static float MaximumPossiblePartMass(Part p)
         {
             float maxMass = p.mass;
@@ -200,22 +196,21 @@ namespace KerbalJointReinforcement
                 maxMass += (float)(r.info.density * r.maxAmount);
             }
             if (settings.debug)
-                Debug.Log("Maximum mass for part " + p.partInfo.title + " is " + maxMass);
+                Debug.Log($"Maximum mass for part {p.partInfo.title} is {maxMass}");
             return maxMass;
         }
 
         public static void AddDecouplerJointReinforcementModule(Part p)
         {
-            p.AddModule("KJRDecouplerReinforcementModule");
-            (p.Modules["KJRDecouplerReinforcementModule"] as KJRDecouplerReinforcementModule).OnPartUnpack();
+            var pm = (KJRDecouplerReinforcementModule)p.AddModule(nameof(KJRDecouplerReinforcementModule));
+            pm.OnPartUnpack();
             if (settings.debug)
                 Debug.Log("Added KJRDecouplerReinforcementModule to part " + p.partInfo.title);
         }
 
         public static void AddLaunchClampReinforcementModule(Part p)
         {
-            p.AddModule("KJRLaunchClampReinforcementModule");
-            var pm = p.Modules["KJRLaunchClampReinforcementModule"] as KJRLaunchClampReinforcementModule;
+            var pm = (KJRLaunchClampReinforcementModule)p.AddModule(nameof(KJRLaunchClampReinforcementModule));
             pm.clampJointHasInfiniteStrength = settings.clampJointHasInfiniteStrength;
             pm.OnPartUnpack();
             if (settings.debug)
@@ -229,9 +224,9 @@ namespace KerbalJointReinforcement
             if (settings.debug)
             {
                 StringBuilder debugString = new StringBuilder();
-                debugString.AppendLine("\n\rAngular Drive: \n\rSpring: " + settings.angularDriveSpring + "\n\rDamp: " + settings.angularDriveDamper + "\n\rMax Force Factor: " + settings.angularMaxForceFactor);
+                debugString.AppendLine($"\n\rAngular Drive: \n\rSpring: {settings.angularDriveSpring}\n\rDamp: {settings.angularDriveDamper}\n\rMax Force Factor: {settings.angularMaxForceFactor}");
 
-                debugString.AppendLine("\n\rJoint Strength Multipliers: \n\rForce Multiplier: " + settings.breakForceMultiplier + "\n\rTorque Multiplier: " + settings.breakTorqueMultiplier);
+                debugString.AppendLine($"\n\rJoint Strength Multipliers: \n\rForce Multiplier: {settings.breakForceMultiplier}\n\rTorque Multiplier: {settings.breakTorqueMultiplier}");
                 debugString.AppendLine("Joint Force Strength Per Unit Area: " + settings.breakStrengthPerArea);
                 debugString.AppendLine("Joint Torque Strength Per Unit MOI: " + settings.breakTorquePerMOI);
 
@@ -299,7 +294,7 @@ namespace KerbalJointReinforcement
                 }
 
                 if (settings.debug)
-                    MonoBehaviour.print(part.partInfo.title + ": Choosing axis " + dir + " for KJR surface attach" + (first ? "" : " from node") + ".");
+                    MonoBehaviour.print($"{part.partInfo.title}: Choosing axis {dir} for KJR surface attach{(first ? "" : " from node")}.");
 
                 return dir;
             }
@@ -369,7 +364,7 @@ namespace KerbalJointReinforcement
                 maxBounds = minBounds = Vector3.zero;
             }
             else if (settings.debug)
-                Debug.Log("Extents: " + minBounds + " .. " + maxBounds + " = " + (maxBounds - minBounds));
+                Debug.Log($"Extents: {minBounds} .. {maxBounds} = {maxBounds - minBounds}");
 
             //attachNodeLoc = p.transform.worldToLocalMatrix.MultiplyVector(p.parent.transform.position - p.transform.position);
             return maxBounds - minBounds;
@@ -389,14 +384,11 @@ namespace KerbalJointReinforcement
         public static float CalculateSideArea(Part p, Vector3 attachNodeLoc)
         {
             Vector3 maxExtents = CalculateExtents(p, attachNodeLoc);
-            float area;
-
             //maxExtents = Vector3.Exclude(maxExtents, Vector3.up);
 
-            area = maxExtents.x * maxExtents.z;
+            float area = maxExtents.x * maxExtents.z;
 
             return area;
         }
     }
-
 }

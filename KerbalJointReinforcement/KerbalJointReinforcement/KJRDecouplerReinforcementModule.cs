@@ -18,7 +18,6 @@ Copyright 2015, Michael Ferrara, aka Ferram4
     along with Kerbal Joint Reinforcement.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
@@ -31,13 +30,13 @@ namespace KerbalJointReinforcement
         protected List<ConfigurableJoint> joints = new List<ConfigurableJoint>();
         protected List<Part> neighbours = new List<Part>();
         private PartModule decoupler = null;
-        //private bool radiallyAttached = false;
 
         public override void OnAwake()
         {
             base.OnAwake();
 
             foreach (PartModule m in part.Modules)
+            {
                 if (m is ModuleDecouple)
                 {
                     decoupler = m;
@@ -48,27 +47,16 @@ namespace KerbalJointReinforcement
                     decoupler = m;
                     break;
                 }
+            }
         }
-
-        public override void OnStart(PartModule.StartState state)
-        {
-            base.OnStart(state);
-
-            if (part.parent == null)
-                return;
-
-            //if (part.attachMode == AttachModes.SRF_ATTACH)
-            //    radiallyAttached = true;
-        }
-
 
         public void OnPartUnpack()
         {
             if (part.parent == null || part.children.Count == 0)
                 return;
-            if (decoupler is ModuleDecouple && (decoupler as ModuleDecouple).isDecoupled)
+            if (decoupler is ModuleDecouple md && md.isDecoupled)
                 return;
-            if (decoupler is ModuleAnchoredDecoupler && (decoupler as ModuleAnchoredDecoupler).isDecoupled)
+            if (decoupler is ModuleAnchoredDecoupler mad && mad.isDecoupled)
                 return;
 
             AddExtraJoints();
@@ -82,7 +70,7 @@ namespace KerbalJointReinforcement
                     continue;
 
                 if (KJRJointUtils.settings.debug)
-                    Debug.Log("Decoupling part " + part.partInfo.title + "; destroying all extra joints");
+                    Debug.Log($"Decoupling part {part.partInfo.title}; destroying all extra joints");
 
                 BreakAllInvalidJointsAndRebuild();
                 break;
@@ -94,10 +82,10 @@ namespace KerbalJointReinforcement
             List<Part> childParts = new List<Part>();
             List<Part> parentParts = new List<Part>();
 
-            parentParts = KJRJointUtils.DecouplerPartStiffeningList(part.parent, false, true);
+            parentParts = KJRJointUtils.GetDecouplerPartStiffeningList(part.parent, false, true);
             foreach (Part p in part.children)
             {
-                childParts.AddRange(KJRJointUtils.DecouplerPartStiffeningList(p, true, true));
+                childParts.AddRange(KJRJointUtils.GetDecouplerPartStiffeningList(p, true, true));
                 if (!childParts.Contains(p))
                     childParts.Add(p);
             }
@@ -114,23 +102,23 @@ namespace KerbalJointReinforcement
             if (KJRJointUtils.settings.debug)
             {
                 debugString = new StringBuilder();
-                debugString.AppendLine(parentParts.Count + " parts above decoupler to be connected to " + childParts.Count + " below decoupler.");
-                debugString.AppendLine("The following joints added by " + part.partInfo.title + " to increase stiffness:");
+                debugString.AppendLine($"{parentParts.Count} parts above decoupler to be connected to {childParts.Count} below decoupler.");
+                debugString.AppendLine($"The following joints added by {part.partInfo.title} to increase stiffness:");
             }
 
             foreach (Part p in parentParts)
             {
-                if (p == null || p.rb == null || p.Modules.Contains("ProceduralFairingDecoupler") || !KJRJointUtils.JointAdjustmentValid(p))
+                if (p == null || p.rb == null || p.Modules.Contains("ProceduralFairingDecoupler") || !KJRJointUtils.IsJointAdjustmentValid(p))
                     continue;
                 foreach (Part q in childParts)
                 {
-                    if (q == null || q.rb == null || q.Modules.Contains("ProceduralFairingDecoupler") || p == q || !KJRJointUtils.JointAdjustmentValid(q))
+                    if (q == null || q.rb == null || q.Modules.Contains("ProceduralFairingDecoupler") || p == q || !KJRJointUtils.IsJointAdjustmentValid(q))
                         continue;
 
                     StrutConnectParts(p, q);
 
                     if (KJRJointUtils.settings.debug)
-                        debugString.AppendLine(p.partInfo.title + " connected to part " + q.partInfo.title);
+                        debugString.AppendLine($"{p.partInfo.title} connected to part {q.partInfo.title}");
                 }
             }
 
@@ -150,12 +138,13 @@ namespace KerbalJointReinforcement
             {
                 GameEvents.onVesselWasModified.Remove(OnVesselWasModified);
                 GameEvents.onVesselCreate.Remove(OnVesselWasModified);
+
+                foreach (ConfigurableJoint j in joints)
+                    GameObject.Destroy(j);
+
+                joints.Clear();
             }
 
-            foreach (ConfigurableJoint j in joints)
-                GameObject.Destroy(j);
-
-            joints.Clear();
             neighbours.Clear();
         }
 
@@ -214,9 +203,9 @@ namespace KerbalJointReinforcement
 
             if (part.parent == null || part.children.Count == 0)
                 return;
-            if (decoupler is ModuleDecouple && (decoupler as ModuleDecouple).isDecoupled)
+            if (decoupler is ModuleDecouple md && md.isDecoupled)
                 return;
-            if (decoupler is ModuleAnchoredDecoupler && (decoupler as ModuleAnchoredDecoupler).isDecoupled)
+            if (decoupler is ModuleAnchoredDecoupler mad && mad.isDecoupled)
                 return;
 
             AddExtraJoints();
@@ -252,8 +241,6 @@ namespace KerbalJointReinforcement
             newJoint.breakTorque = breakTorque;
 
             joints.Add(newJoint);
-
         }
     }
-
 }

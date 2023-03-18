@@ -17,9 +17,7 @@ Copyright 2015, Michael Ferrara, aka Ferram4
     You should have received a copy of the GNU General Public License
     along with Kerbal Joint Reinforcement.  If not, see <http://www.gnu.org/licenses/>.
 */
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace KerbalJointReinforcement
@@ -63,7 +61,7 @@ namespace KerbalJointReinforcement
             //Debug.Log(v.name + " joint break");
             OnJointBreak(v.rootPart);
 
-            for(int i = 0; i < v.Parts.Count; ++i)
+            for (int i = 0; i < v.Parts.Count; ++i)
             {
                 Part p = v.Parts[i];
                 OnJointBreak(p);
@@ -76,7 +74,7 @@ namespace KerbalJointReinforcement
             linkPart2List.Clear();
             linkedSet.Clear();
 
-            if (!KJRJointUtils.JointAdjustmentValid(linkPart1) || !KJRJointUtils.JointAdjustmentValid(linkPart2))
+            if (!KJRJointUtils.IsJointAdjustmentValid(linkPart1) || !KJRJointUtils.IsJointAdjustmentValid(linkPart2))
                 return false;
 
             //Add the parts we're connecting to their respective lists
@@ -84,12 +82,12 @@ namespace KerbalJointReinforcement
             linkPart2List.Add(linkPart2);
 
             //iterate through each part's parents, making them the new linkPart and then adding them to their respective lists.  LinkPart.parent will not be null until it reaches the root part
-            while ((object)linkPart1.parent != null)
+            while (!(linkPart1.parent is null))
             {
                 linkPart1 = linkPart1.parent;
                 linkPart1List.Add(linkPart1);
             }
-            while ((object)linkPart2.parent != null)
+            while (!(linkPart2.parent is null))
             {
                 linkPart2 = linkPart2.parent;
                 linkPart2List.Add(linkPart2);
@@ -124,23 +122,23 @@ namespace KerbalJointReinforcement
                     continue;
 
                 //if we have reached the merge, all the remaining parts are parts of the line connecting these parts and should be set to be disconnected
-                if ((object)p != null)
+                if (!(p is null))
                 {
-                    if (KJRJointUtils.JointAdjustmentValid(p))
+                    if (KJRJointUtils.IsJointAdjustmentValid(p))
                         linkedSet.Add(p);
                     else
                         return false;
                 }
-                if ((object)q != null)
+                if (!(q is null))
                 {
-                    if (KJRJointUtils.JointAdjustmentValid(q))
+                    if (KJRJointUtils.IsJointAdjustmentValid(q))
                         linkedSet.Add(q);
                     else
                         return false;
                 }
 
                 //if both p and q are null, that means we've reached the end of both lines and so all the parts have been added
-                if ((object)p == null && (object)q == null)
+                if (p is null && q is null)
                     break;
             }
 

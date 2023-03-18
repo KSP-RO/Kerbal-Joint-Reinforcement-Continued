@@ -18,7 +18,6 @@ Copyright 2015, Michael Ferrara, aka Ferram4
     along with Kerbal Joint Reinforcement.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
@@ -32,10 +31,10 @@ namespace KerbalJointReinforcement
         public bool clampJointHasInfiniteStrength = false;
 
         private bool createHackedJoints = false;
+        private bool subscribedToEvents = false;
         private List<ConfigurableJoint> joints;
         private List<ConfigurableJoint> hackedJoints;
         private List<Part> neighbours = new List<Part>();
-        //private bool decoupled = false;
 
         public override void OnAwake()
         {
@@ -55,7 +54,7 @@ namespace KerbalJointReinforcement
             if (KJRJointUtils.settings.debug)
             {
                 debugString = new StringBuilder();
-                debugString.AppendLine("The following joints added by " + part.partInfo.title + " to increase stiffness:");
+                debugString.AppendLine($"The following joints added by {part.partInfo.title} to increase stiffness:");
             }
 
             if (part.parent.Rigidbody != null)
@@ -73,12 +72,15 @@ namespace KerbalJointReinforcement
 
             if (KJRJointUtils.settings.debug)
             {
-                debugString.AppendLine(part.parent.partInfo.title + " connected to part " + part.partInfo.title);
+                debugString.AppendLine($"{part.parent.partInfo.title} connected to part {part.partInfo.title}");
                 Debug.Log(debugString.ToString());
             }
 
             if (joints.Count > 0 || createHackedJoints)
+            {
                 GameEvents.onVesselWasModified.Add(OnVesselWasModified);
+                subscribedToEvents = true;
+            }
         }
 
         private void OnVesselWasModified(Vessel v)
@@ -97,7 +99,7 @@ namespace KerbalJointReinforcement
                     continue;
 
                 if (KJRJointUtils.settings.debug)
-                    Debug.Log("[KJR] Decoupling part " + part.partInfo.title + "; destroying all extra joints");
+                    Debug.Log($"[KJR] Decoupling part {part.partInfo.title}; destroying all extra joints");
                 
                 BreakAllInvalidJoints();
                 return;
@@ -106,8 +108,11 @@ namespace KerbalJointReinforcement
 
         public void OnPartPack()
         {
-            if (joints.Count > 0 || hackedJoints.Count > 0)
+            if (subscribedToEvents)
+            {
                 GameEvents.onVesselWasModified.Remove(OnVesselWasModified);
+                subscribedToEvents = false;
+            }
 
             foreach (ConfigurableJoint j in joints)
                 GameObject.Destroy(j);
@@ -123,13 +128,17 @@ namespace KerbalJointReinforcement
 
         public void OnDestroy()
         {
-            if (joints.Count > 0 || createHackedJoints)
+            if (subscribedToEvents)
+            {
                 GameEvents.onVesselWasModified.Remove(OnVesselWasModified);
+                subscribedToEvents = false;
+            }
         }
 
         private void BreakAllInvalidJoints()
         {
             GameEvents.onVesselWasModified.Remove(OnVesselWasModified);
+            subscribedToEvents = false;
 
             foreach (ConfigurableJoint j in joints)
                 GameObject.Destroy(j);
@@ -179,9 +188,8 @@ namespace KerbalJointReinforcement
             Vector3 anchor, axis;
             anchor = Vector3.zero;
             axis = Vector3.right;
-            ConfigurableJoint newJoint;
 
-            newJoint = partWithJoint.gameObject.AddComponent<ConfigurableJoint>();
+            ConfigurableJoint newJoint = partWithJoint.gameObject.AddComponent<ConfigurableJoint>();
 
             newJoint.connectedBody = rigidBody;
             newJoint.anchor = anchor;
