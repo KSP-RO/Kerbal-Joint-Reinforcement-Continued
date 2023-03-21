@@ -31,6 +31,7 @@ namespace KerbalJointReinforcement
         public bool clampJointHasInfiniteStrength = false;
 
         private bool createHackedJoints = false;
+        bool alreadyUnpacked = false;
         private bool subscribedToEvents = false;
         private List<ConfigurableJoint> joints;
         private List<ConfigurableJoint> hackedJoints;
@@ -45,9 +46,10 @@ namespace KerbalJointReinforcement
 
         public void OnPartUnpack()
         {
-            if (part.parent == null)
+            if (part.parent == null || alreadyUnpacked)
                 return;
 
+            alreadyUnpacked = true;
             neighbours.Add(part.parent);
 
             StringBuilder debugString = null;
@@ -124,6 +126,7 @@ namespace KerbalJointReinforcement
             hackedJoints.Clear();
             neighbours.Clear();
             createHackedJoints = false;
+            alreadyUnpacked = false;
         }
 
         public void OnDestroy()
