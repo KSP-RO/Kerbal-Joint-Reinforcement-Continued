@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿#define CIBUILD_disabled
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -32,5 +33,12 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("3.6.1.0")]
-[assembly: AssemblyFileVersion("3.6.1.0")]
+#if CIBUILD
+[assembly: AssemblyVersion("@MAJOR@.@MINOR@.@PATCH@.@BUILD@")]
+[assembly: AssemblyFileVersion("@MAJOR@.@MINOR@.@PATCH@.@BUILD@")]
+[assembly: KSPAssembly("KerbalJointReinforcement", @MAJOR@, @MINOR@, @PATCH@)]
+#else
+[assembly: AssemblyVersion("3.99.0.0")]
+[assembly: AssemblyFileVersion("3.99.0.0")]
+[assembly: KSPAssembly("KerbalJointReinforcement", 3, 99, 0)]
+#endif
