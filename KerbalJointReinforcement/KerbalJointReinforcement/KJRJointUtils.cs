@@ -200,14 +200,6 @@ namespace KerbalJointReinforcement
             return maxMass;
         }
 
-        public static void AddDecouplerJointReinforcementModule(Part p)
-        {
-            var pm = (KJRDecouplerReinforcementModule)p.AddModule(nameof(KJRDecouplerReinforcementModule));
-            pm.OnPartUnpack();
-            if (settings.debug)
-                Debug.Log("[KJR] Added KJRDecouplerReinforcementModule to part " + p.partInfo.title);
-        }
-
         public static void AddLaunchClampReinforcementModule(Part p)
         {
             var pm = (KJRLaunchClampReinforcementModule)p.AddModule(nameof(KJRLaunchClampReinforcementModule));

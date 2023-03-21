@@ -34,10 +34,14 @@ namespace KerbalJointReinforcement
         private HashSet<Vessel> vesselOffRails;
         private Dictionary<Vessel, List<Joint>> vesselJointStrengthened;
         private KJRMultiJointManager multiJointManager;
+        private KJRMultiJointManager decouplerJointManager;
         private bool isEVAConstructionModeActive = false;
 
+        private bool showAdditionalJoints = true;
+        private bool showInterstageJoints = true;
         private List<LineRenderer> jointRenderers;
-        private List<string> jointNames;
+        private List<string> additionalJointNames;
+        private List<string> interstageJointNames;
         private Material material;
 
         private Rect windowRect;
@@ -50,6 +54,7 @@ namespace KerbalJointReinforcement
             vesselOffRails = new HashSet<Vessel>();
             vesselJointStrengthened = new Dictionary<Vessel, List<Joint>>();
             multiJointManager = new KJRMultiJointManager();
+            decouplerJointManager = new KJRMultiJointManager();
         }
 
         public void Start()
@@ -81,6 +86,9 @@ namespace KerbalJointReinforcement
 
             multiJointManager.OnDestroy();
             multiJointManager = null;
+
+            decouplerJointManager.OnDestroy();
+            decouplerJointManager = null;
 
             CleanUpDebugRenderers();
         }
@@ -226,6 +234,7 @@ namespace KerbalJointReinforcement
             if (!servoIsLocked)
             {
                 multiJointManager.OnJointBreak(part);
+                decouplerJointManager.OnJointBreak(part);
             }
             OnVesselWasModified(part.vessel);
         }
@@ -233,6 +242,7 @@ namespace KerbalJointReinforcement
         private void OnEVAConstructionModePartDetached(Vessel v, Part p)
         {
             multiJointManager.OnJointBreak(p);
+            decouplerJointManager.OnJointBreak(p);
         }
 
         private void OnEVAConstructionMode(bool active)
@@ -267,7 +277,7 @@ namespace KerbalJointReinforcement
 
                 if (KJRJointUtils.settings.reinforceDecouplersFurther && IsValidDecoupler(p))
                 {
-                    KJRJointUtils.AddDecouplerJointReinforcementModule(p);
+                    MultiJointReinforceDecoupler(p);
                     continue;
                 }
 
@@ -294,8 +304,7 @@ namespace KerbalJointReinforcement
 
         private bool IsValidDecoupler(Part p)
         {
-            return (p.Modules.Contains<ModuleDecouple>() || p.Modules.Contains<ModuleAnchoredDecoupler>()) &&
-                   !p.Modules.Contains<KJRDecouplerReinforcementModule>();
+            return p.Modules.Contains<ModuleDecouple>() || p.Modules.Contains<ModuleAnchoredDecoupler>();
         }
 
         public void FixedUpdate()
@@ -708,7 +717,6 @@ namespace KerbalJointReinforcement
 
                     if (connectedRb != null && !multiJointManager.CheckMultiJointBetweenParts(p, newConnectedPart))
                     {
-
                         ConfigurableJoint newJoint = p.gameObject.AddComponent<ConfigurableJoint>();
 
                         newJoint.connectedBody = connectedRb;
@@ -839,6 +847,105 @@ namespace KerbalJointReinforcement
                 Debug.Log(debugString.ToString());
         }
 
+        public void MultiJointReinforceDecoupler(Part part)
+        {
+            if (part.parent == null || part.children.Count == 0)
+                return;
+
+            PartModule decoupler = null;
+            foreach (PartModule m in part.Modules)
+            {
+                if (m is ModuleDecouple)
+                {
+                    decoupler = m;
+                    break;
+                }
+                else if (m is ModuleAnchoredDecoupler)
+                {
+                    decoupler = m;
+                    break;
+                }
+            }
+
+            if (decoupler is ModuleDecouple md && md.isDecoupled)
+                return;
+            if (decoupler is ModuleAnchoredDecoupler mad && mad.isDecoupled)
+                return;
+
+            List<Part> childParts = new List<Part>();
+            List<Part> parentParts = new List<Part>();
+
+            parentParts = KJRJointUtils.GetDecouplerPartStiffeningList(part.parent, false, true);
+            foreach (Part p in part.children)
+            {
+                childParts.AddRange(KJRJointUtils.GetDecouplerPartStiffeningList(p, true, true));
+                if (!childParts.Contains(p))
+                    childParts.Add(p);
+            }
+
+            parentParts.Add(part);
+
+            StringBuilder debugString = null;
+
+            if (KJRJointUtils.settings.debug)
+            {
+                debugString = new StringBuilder();
+                debugString.AppendLine($"{parentParts.Count} parts above decoupler to be connected to {childParts.Count} below decoupler.");
+                debugString.AppendLine($"The following joints added by {part.partInfo.title} to increase stiffness:");
+            }
+
+            foreach (Part p in parentParts)
+            {
+                if (p == null || p.rb == null || p.Modules.Contains("ProceduralFairingDecoupler") || !KJRJointUtils.IsJointAdjustmentValid(p))
+                    continue;
+                foreach (Part q in childParts)
+                {
+                    if (q == null || q.rb == null || q.Modules.Contains("ProceduralFairingDecoupler") || p == q || !KJRJointUtils.IsJointAdjustmentValid(q))
+                        continue;
+
+                    if (decouplerJointManager.CheckMultiJointBetweenParts(p, q) || !decouplerJointManager.TrySetValidLinkedSet(p, q))
+                        continue;
+
+                    CreateDecouplerMultiJoint(p, q);
+
+                    if (KJRJointUtils.settings.debug)
+                        debugString.AppendLine($"{p.partInfo.title} connected to part {q.partInfo.title}");
+                }
+            }
+
+            if (KJRJointUtils.settings.debug)
+                Debug.Log(debugString.ToString());
+        }
+
+        private void CreateDecouplerMultiJoint(Part partWithJoint, Part partConnectedByJoint)
+        {
+            Rigidbody rigidBody = partConnectedByJoint.rb;
+            float breakForce = KJRJointUtils.settings.decouplerAndClampJointStrength;
+            float breakTorque = KJRJointUtils.settings.decouplerAndClampJointStrength;
+
+            Vector3 anchor = Vector3.zero;
+            Vector3 axis = Vector3.right;
+
+            ConfigurableJoint newJoint = partWithJoint.gameObject.AddComponent<ConfigurableJoint>();
+
+            newJoint.connectedBody = rigidBody;
+            newJoint.anchor = anchor;
+            newJoint.connectedAnchor = partWithJoint.transform.worldToLocalMatrix.MultiplyPoint(partConnectedByJoint.transform.position);
+            newJoint.axis = axis;
+            newJoint.secondaryAxis = Vector3.forward;
+            newJoint.breakForce = breakForce;
+            newJoint.breakTorque = breakTorque;
+
+            newJoint.xMotion = newJoint.yMotion = newJoint.zMotion = ConfigurableJointMotion.Locked;
+            newJoint.angularXMotion = newJoint.angularYMotion = newJoint.angularZMotion = ConfigurableJointMotion.Locked;
+
+
+            newJoint.breakForce = breakForce;
+            newJoint.breakTorque = breakTorque;
+
+            decouplerJointManager.RegisterMultiJointBetweenParts(partWithJoint, partConnectedByJoint, newJoint);
+        }
+
         public void MultiPartJointTreeChildren(Vessel v)
         {
             if (v.Parts.Count <= 1)
@@ -955,13 +1062,22 @@ namespace KerbalJointReinforcement
             }
 
             jointRenderers = new List<LineRenderer>();
-            jointNames = new List<string>();
+            additionalJointNames = new List<string>();
+            interstageJointNames = new List<string>();
             var uniqueJoints = new HashSet<ConfigurableJoint>();
 
             if (material == null)
                 material = new Material(Shader.Find("Legacy Shaders/Particles/Additive"));
 
-            foreach (KeyValuePair<Part, List<ConfigurableJoint>> kvp in multiJointManager.multiJointDict)
+            if (showAdditionalJoints)
+                GatherNamesAndCreateRenderers(multiJointManager.multiJointDict, uniqueJoints, additionalJointNames);
+            if (showInterstageJoints)
+                GatherNamesAndCreateRenderers(decouplerJointManager.multiJointDict, uniqueJoints, interstageJointNames);
+        }
+
+        private void GatherNamesAndCreateRenderers(Dictionary<Part, List<ConfigurableJoint>> dict, HashSet<ConfigurableJoint> uniqueJoints, List<string> jointNames)
+        {
+            foreach (KeyValuePair<Part, List<ConfigurableJoint>> kvp in dict)
             {
                 List<ConfigurableJoint> joints = kvp.Value;
                 foreach (ConfigurableJoint joint in joints)
@@ -992,14 +1108,32 @@ namespace KerbalJointReinforcement
         {
             scrollPos = GUILayout.BeginScrollView(scrollPos, GUILayout.Width(400), GUILayout.Height(500));
             GUILayout.BeginVertical();
-            GUILayout.Label($"{jointNames.Count} unique joints:");
-            if (jointNames != null)
+            showAdditionalJoints = GUILayout.Toggle(showAdditionalJoints, "Show Additional Joints");
+            if (showAdditionalJoints)
             {
-                foreach (string jn in jointNames)
+                GUILayout.Label($"{additionalJointNames?.Count} unique additional joints:");
+                if (additionalJointNames != null)
                 {
-                    GUILayout.Label(jn);
+                    foreach (string jn in additionalJointNames)
+                    {
+                        GUILayout.Label(jn);
+                    }
                 }
             }
+
+            showInterstageJoints = GUILayout.Toggle(showInterstageJoints, "Show Interstage Joints");
+            if (showInterstageJoints)
+            {
+                GUILayout.Label($"{interstageJointNames?.Count} unique interstage joints:");
+                if (interstageJointNames != null)
+                {
+                    foreach (string jn in interstageJointNames)
+                    {
+                        GUILayout.Label(jn);
+                    }
+                }
+            }
+
             GUILayout.EndVertical();
             GUILayout.EndScrollView();
             GUI.DragWindow();
@@ -1022,7 +1156,8 @@ namespace KerbalJointReinforcement
                 material = null;
             }
 
-            jointNames = null;
+            additionalJointNames = null;
+            interstageJointNames = null;
         }
     }
 }

@@ -58,6 +58,8 @@ namespace KerbalJointReinforcement
         //Therefore, we only need to use vessel.RootPart and the parts with no children to ensure that all multijoints are broken
         private void VesselCreate(Vessel v)
         {
+            if (multiJointDict.Count == 0) return;
+
             //Debug.Log($"[KJR] {v.name} joint break");
             OnJointBreak(v.rootPart);
 
