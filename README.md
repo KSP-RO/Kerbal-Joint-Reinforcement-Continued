@@ -1,4 +1,4 @@
-Kerbal Joint Reinforcement, v3.6.0
+Kerbal Joint Reinforcement, v3.7.0
 ==========================
 
 Physics stabilizer plugin for Kerbal Space Program
@@ -121,6 +121,15 @@ These types are currently not used, but removing the a in front of them will cau
 ***********************
 ****** CHANGELOG ******
 ***********************
+v3.7.0
+
+	--Fix bug that caused the stock EVA construction feature to actually not be supported
+	--Rework the interstage connection stiffening feature
+	--Fix a couple of GameEvents leaks
+	--Add option to debug UI for toggling what kind of joints to show
+	--Unify tags in log messages
+	--Various code cleanup and refactoring
+
 v3.6.1
 
 	--Enable the DockingPortLockedEvents patch in KSPCommunityFixes to properly support the rotation feature on stock docking ports
