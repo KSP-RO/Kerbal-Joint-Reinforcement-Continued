@@ -109,7 +109,16 @@ namespace KerbalJointReinforcement
         private void OnVesselWasModified(Vessel v)
         {
             if (v is null || v.isEVA)
-                return; 
+                return;
+
+            if (!v.rootPart.started)
+            {
+                // Need to guard against this event getting called too early in the vessel lifecycle. 
+                // It can take a few frames before rigidbodies and stock joints are created.
+                if (KJRJointUtils.settings.debug)
+                    Debug.Log($"[KJR] OnVesselWasModified called too early for {v.vesselName}: {Environment.StackTrace}");
+                return;
+            }
             
             if (KJRJointUtils.settings.debug)
             {
@@ -147,6 +156,9 @@ namespace KerbalJointReinforcement
 
             disableAllJoints = false;
             bool vesselHasLaunchClamps = false;
+
+            if (KJRJointUtils.settings.debug)
+                Debug.Log("[KJR] OnVesselOffRails " + v.vesselName);
 
             RunVesselJointUpdateFunction(v);
             if (!vesselOffRails.Contains(v) && v.precalc.isEasingGravity)
