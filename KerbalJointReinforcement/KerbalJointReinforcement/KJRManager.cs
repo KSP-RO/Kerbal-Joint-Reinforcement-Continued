@@ -37,6 +37,7 @@ namespace KerbalJointReinforcement
         private KJRMultiJointManager decouplerJointManager;
         private bool isEVAConstructionModeActive = false;
 
+        private bool disableAllJoints = false;
         private bool showAdditionalJoints = true;
         private bool showInterstageJoints = true;
         private List<LineRenderer> jointRenderers;
@@ -144,6 +145,7 @@ namespace KerbalJointReinforcement
             if (v is null || v.isEVA)
                 return;
 
+            disableAllJoints = false;
             bool vesselHasLaunchClamps = false;
 
             RunVesselJointUpdateFunction(v);
@@ -1108,6 +1110,22 @@ namespace KerbalJointReinforcement
         {
             scrollPos = GUILayout.BeginScrollView(scrollPos, GUILayout.Width(400), GUILayout.Height(500));
             GUILayout.BeginVertical();
+
+            bool prevVal = disableAllJoints;
+            disableAllJoints = GUILayout.Toggle(disableAllJoints, "Disable all joints");
+            if (disableAllJoints != prevVal)
+            {
+                updatedVessels.Remove(FlightGlobals.ActiveVessel);
+                if (disableAllJoints)
+                {
+                    DestroyAllExtraJoints(FlightGlobals.ActiveVessel);
+                }
+                else
+                {
+                    StartCoroutine(RunVesselJointUpdateFunctionWhenSafe(FlightGlobals.ActiveVessel));
+                }
+            }
+
             showAdditionalJoints = GUILayout.Toggle(showAdditionalJoints, "Show Additional Joints");
             if (showAdditionalJoints)
             {
@@ -1137,6 +1155,15 @@ namespace KerbalJointReinforcement
             GUILayout.EndVertical();
             GUILayout.EndScrollView();
             GUI.DragWindow();
+        }
+
+        private void DestroyAllExtraJoints(Vessel vessel)
+        {
+            foreach (Part p in vessel.Parts)
+            {
+                multiJointManager.OnJointBreak(p);
+                decouplerJointManager.OnJointBreak(p);
+            }
         }
 
         private void CleanUpDebugRenderers()
