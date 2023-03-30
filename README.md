@@ -1,4 +1,4 @@
-Kerbal Joint Reinforcement, v3.7.0
+Kerbal Joint Reinforcement, v3.7.1
 ==========================
 
 Physics stabilizer plugin for Kerbal Space Program
@@ -121,6 +121,11 @@ These types are currently not used, but removing the a in front of them will cau
 ***********************
 ****** CHANGELOG ******
 ***********************
+v3.7.1
+
+	--Fix extra joints getting created too early in the lifecycle
+	--Add toggle to debug GUI for temporarily disabling all joints
+
 v3.7.0
 
 	--Fix bug that caused the stock EVA construction feature to actually not be supported
