@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using CompoundParts;
+using UnityEngine.Profiling;
 
 namespace KerbalJointReinforcement
 {
@@ -173,11 +174,10 @@ namespace KerbalJointReinforcement
                     if (p.attachJoint)
                         p.attachJoint.SetUnbreakable(true, false);
 
-                    Joint[] partJoints = p.GetComponents<Joint>();
-
                     if (p.Modules.Contains<LaunchClamp>())
                     {
                         vesselHasLaunchClamps = true;
+                        Joint[] partJoints = p.GetComponents<Joint>();
                         foreach (Joint j in partJoints)
                         {
                             if (j.connectedBody == null)
@@ -232,6 +232,8 @@ namespace KerbalJointReinforcement
 
                     vesselOffRails.Remove(v);
                 }
+
+                DestroyAllExtraJoints(v);
                 vesselJointStrengthened.Remove(v);
                 updatedVessels.Remove(v);
             }
@@ -266,8 +268,11 @@ namespace KerbalJointReinforcement
 
         private void RunVesselJointUpdateFunction(Vessel v)
         {
+            Profiler.BeginSample("KJR-RunVesselJointUpdateFunction");
+            System.Diagnostics.Stopwatch sw = null;
             if (KJRJointUtils.settings.debug)
             {
+                sw = System.Diagnostics.Stopwatch.StartNew();
                 Debug.Log($"[KJR] Processing vessel {v.id} ({v.GetName()}); root {v.rootPart.partInfo.name} ({v.rootPart.flightID})");
             }
 
@@ -314,6 +319,9 @@ namespace KerbalJointReinforcement
 
             if (success || !child_parts)
                 updatedVessels.Add(v);
+
+            Profiler.EndSample();
+            if (KJRJointUtils.settings.debug) Debug.Log($"[KJR] RunVesselJointUpdateFunction finished in {sw.Elapsed.TotalMilliseconds}ms");
         }
 
         private bool IsValidDecoupler(Part p)
@@ -1171,11 +1179,18 @@ namespace KerbalJointReinforcement
 
         private void DestroyAllExtraJoints(Vessel vessel)
         {
+            System.Diagnostics.Stopwatch sw = null;
+            if (KJRJointUtils.settings.debug) sw = System.Diagnostics.Stopwatch.StartNew();
+            Profiler.BeginSample("KJR-DestroyAllExtraJoints");
+
             foreach (Part p in vessel.Parts)
             {
                 multiJointManager.OnJointBreak(p);
                 decouplerJointManager.OnJointBreak(p);
             }
+
+            Profiler.EndSample();
+            if (KJRJointUtils.settings.debug) Debug.Log($"[KJR] DestroyAllExtraJoints finished in {sw.Elapsed.TotalMilliseconds}ms");
         }
 
         private void CleanUpDebugRenderers()
