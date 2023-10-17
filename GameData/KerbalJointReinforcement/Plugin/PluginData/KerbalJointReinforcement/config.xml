@@ -8,8 +8,6 @@
     <bool name="useVolumeNotArea">1</bool>
     <bool name="debug">0</bool>
 
-    <float name="angularDriveSpring">5e12</float>
-    <float name="angularDriveDamper">25</float>
     <float name="angularMaxForceFactor">-1</float>
 
     <float name="decouplerAndClampJointStrength">-1</float>

@@ -635,19 +635,7 @@ namespace KerbalJointReinforcement
                 breakTorque = Mathf.Max(KJRJointUtils.settings.breakTorquePerMOI * momentOfInertia, breakTorque);
 
                 JointDrive angDrive = j.angularXDrive;
-                angDrive.positionSpring = Mathf.Max(momentOfInertia * KJRJointUtils.settings.angularDriveSpring, angDrive.positionSpring);
-                angDrive.positionDamper = Mathf.Max(momentOfInertia * KJRJointUtils.settings.angularDriveDamper * 0.1f, angDrive.positionDamper);
                 angDrive.maximumForce = breakTorque;
-                /*float moi_avg = p.rb.inertiaTensor.magnitude;
-
-                moi_avg += (p.transform.localToWorldMatrix.MultiplyPoint(p.CoMOffset) - p.parent.transform.position).sqrMagnitude * p.rb.mass;
-
-                if (moi_avg * 2f / drive.positionDamper < 0.08f)
-                {
-                    drive.positionDamper = moi_avg / (0.04f);
-
-                    drive.positionSpring = drive.positionDamper * drive.positionDamper / moi_avg;
-                }*/
                 j.angularXDrive = j.angularYZDrive = j.slerpDrive = angDrive;
 
                 JointDrive linDrive = j.xDrive;
@@ -659,7 +647,6 @@ namespace KerbalJointReinforcement
                 lim.bounciness = 0;
 
                 SoftJointLimitSpring limSpring = new SoftJointLimitSpring();
-
                 limSpring.spring = 0;
                 limSpring.damper = 0;
 

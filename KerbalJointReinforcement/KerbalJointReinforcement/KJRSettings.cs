@@ -45,8 +45,6 @@ namespace KerbalJointReinforcement
         public bool debug = false;
 
         // The following fields are marked as internal so that the values wouldn't get persisted to the save file
-        internal float angularDriveSpring = 0;
-        internal float angularDriveDamper = 0;
         internal float angularMaxForceFactor = 0;
 
         internal float breakForceMultiplier = 1;
@@ -89,8 +87,6 @@ namespace KerbalJointReinforcement
             useVolumeNotArea = config.GetValue(nameof(useVolumeNotArea), true);
             debug = config.GetValue(nameof(debug), false);
 
-            angularDriveSpring = config.GetValue(nameof(angularDriveSpring), angularDriveSpring);
-            angularDriveDamper = config.GetValue(nameof(angularDriveDamper), angularDriveDamper);
             angularMaxForceFactor = config.GetValue(nameof(angularMaxForceFactor), angularMaxForceFactor);
             if (angularMaxForceFactor < 0)
                 angularMaxForceFactor = float.MaxValue;
