@@ -104,14 +104,11 @@ namespace KerbalJointReinforcement
             {
                 if (childrenNotParent)
                 {
-                    if (p.children != null)
+                    foreach (Part q in p.children)
                     {
-                        foreach (Part q in p.children)
+                        if (q != null && q.parent == p)
                         {
-                            if (q != null && q.parent == p)
-                            {
-                                newAdditions.AddRange(GetDecouplerPartStiffeningList(q, childrenNotParent, onlyAddLastPart));
-                            }
+                            newAdditions.AddRange(GetDecouplerPartStiffeningList(q, childrenNotParent, onlyAddLastPart));
                         }
                     }
                 }
@@ -122,16 +119,16 @@ namespace KerbalJointReinforcement
             }
             else
             {
-                float thisPartMaxMass = MaximumPossiblePartMass(p);
-                if (childrenNotParent)
+                double thisPartMaxMass = p.physicsMass;
+                if (thisPartMaxMass > 0)
                 {
-                    if (p.children != null)
+                    if (childrenNotParent)
                     {
                         foreach (Part q in p.children)
                         {
                             if (q != null && q.parent == p)
                             {
-                                float massRatio = MaximumPossiblePartMass(q) / thisPartMaxMass;
+                                double massRatio = q.physicsMass / thisPartMaxMass;
                                 //if (massRatio < 1)
                                 //    massRatio = 1 / massRatio;
 
@@ -144,18 +141,18 @@ namespace KerbalJointReinforcement
                             }
                         }
                     }
-                }
-                else if (p.parent)
-                {
-                    float massRatio = MaximumPossiblePartMass(p.parent) / thisPartMaxMass;
-                    //if (massRatio < 1)
-                    //    massRatio = 1 / massRatio;
-
-                    if (massRatio > settings.stiffeningExtensionMassRatioThreshold)
+                    else if (p.parent)
                     {
-                        newAdditions.Add(p.parent);
-                        if (settings.debug)
-                            Debug.Log($"[KJR] Part {p.parent.partInfo.title} added to list due to mass ratio difference");
+                        double massRatio = p.parent.physicsMass / thisPartMaxMass;
+                        //if (massRatio < 1)
+                        //    massRatio = 1 / massRatio;
+
+                        if (massRatio > settings.stiffeningExtensionMassRatioThreshold)
+                        {
+                            newAdditions.Add(p.parent);
+                            if (settings.debug)
+                                Debug.Log($"[KJR] Part {p.parent.partInfo.title} added to list due to mass ratio difference");
+                        }
                     }
                 }
             }
@@ -186,18 +183,6 @@ namespace KerbalJointReinforcement
 
             //newJoint.xMotion = newJoint.yMotion = newJoint.zMotion = ConfigurableJointMotion.Locked;
             //newJoint.angularXMotion = newJoint.angularYMotion = newJoint.angularZMotion = ConfigurableJointMotion.Locked;
-        }
-
-        public static float MaximumPossiblePartMass(Part p)
-        {
-            float maxMass = p.mass;
-            foreach (PartResource r in p.Resources)
-            {
-                maxMass += (float)(r.info.density * r.maxAmount);
-            }
-            if (settings.debug)
-                Debug.Log($"[KJR] Maximum mass for part {p.partInfo.title} is {maxMass}");
-            return maxMass;
         }
 
         public static void AddLaunchClampReinforcementModule(Part p)
