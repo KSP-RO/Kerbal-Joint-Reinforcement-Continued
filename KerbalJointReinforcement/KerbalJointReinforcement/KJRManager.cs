@@ -305,7 +305,7 @@ namespace KerbalJointReinforcement
                 {
                     p.breakingForce = Mathf.Infinity;
                     p.breakingTorque = Mathf.Infinity;
-                    p.mass = Mathf.Max(p.mass, (p.parent.mass + p.parent.GetResourceMass()) * 0.01f);          //We do this to make sure that there is a mass ratio of 100:1 between the clamp and what it's connected to.  This helps counteract some of the wobbliness simply, but also allows some give and springiness to absorb the initial physics kick
+                    p.mass = (float)Math.Max(p.physicsMass, p.parent.physicsMass * 0.01);    //We do this to make sure that there is a mass ratio of 100:1 between the clamp and what it's connected to.  This helps counteract some of the wobbliness simply, but also allows some give and springiness to absorb the initial physics kick
                     if (KJRJointUtils.settings.debug)
                         Debug.Log("[KJR] Launch Clamp Break Force / Torque increased");
 
@@ -413,7 +413,7 @@ namespace KerbalJointReinforcement
             //addAdditionalJointToParent &= !(p.Modules.Contains("LaunchClamp") || (p.parent.Modules.Contains("ModuleDecouple") || p.parent.Modules.Contains("ModuleAnchoredDecoupler")));
             addAdditionalJointToParent &= !p.Modules.Contains<CModuleStrut>();
 
-            float partMass = p.mass + p.GetResourceMass();
+            double partMass = p.physicsMass;
             for (int i = 0; i < jointList.Count; i++)
             {
                 ConfigurableJoint j = jointList[i];
@@ -424,7 +424,7 @@ namespace KerbalJointReinforcement
                 Rigidbody connectedBody = j.connectedBody;
 
                 Part connectedPart = connectedBody.GetComponent<Part>() ?? p.parent;
-                float parentMass = connectedPart.mass + connectedPart.GetResourceMass();
+                double parentMass = connectedPart.physicsMass;
 
                 if (partMass < KJRJointUtils.settings.massForAdjustment || parentMass < KJRJointUtils.settings.massForAdjustment)
                 {
@@ -677,7 +677,7 @@ namespace KerbalJointReinforcement
                     bool massRatioBelowThreshold = false;
                     int numPartsFurther = 0;
 
-                    float partMaxMass = KJRJointUtils.MaximumPossiblePartMass(p);
+                    double partMaxMass = p.physicsMass;
                     List<Part> partsCrossed = new List<Part>();
                     List<Part> possiblePartsCrossed = new List<Part>();
 
@@ -689,12 +689,12 @@ namespace KerbalJointReinforcement
 
                     do
                     {
-                        float massRat1, massRat2;
-                        massRat1 = partMaxMass / newConnectedPart.mass;
+                        double massRat1, massRat2;
+                        massRat1 = partMaxMass / newConnectedPart.physicsMass;
                         if (massRat1 < 1)
                             massRat1 = 1 / massRat1;
 
-                        massRat2 = p.mass / KJRJointUtils.MaximumPossiblePartMass(newConnectedPart);
+                        massRat2 = p.physicsMass / newConnectedPart.physicsMass;
                         if (massRat2 < 1)
                             massRat2 = 1 / massRat2;
 
@@ -965,13 +965,10 @@ namespace KerbalJointReinforcement
             for (int i = 0; i < v.Parts.Count; ++i)
             {
                 Part p = v.Parts[i];
-                if (p.children.Count == 0 && !p.Modules.Contains("LaunchClamp") &&
-                    KJRJointUtils.MaximumPossiblePartMass(p) > KJRJointUtils.settings.massForAdjustment)
+                if (p.rb != null &&
+                    p.children.Count == 0 && !p.Modules.Contains("LaunchClamp") &&
+                    p.physicsMass > KJRJointUtils.settings.massForAdjustment)
                 {
-                    if (p.rb == null && p.Rigidbody != null)
-                    {
-                        p = p.RigidBodyPart;
-                    }
                     childPartsToConnect.Add(p);
                 }
             }
