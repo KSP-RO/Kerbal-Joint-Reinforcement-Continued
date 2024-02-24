@@ -1,4 +1,4 @@
-Kerbal Joint Reinforcement, v3.7.2
+Kerbal Joint Reinforcement, v3.7.3
 ==========================
 
 Physics stabilizer plugin for Kerbal Space Program
@@ -121,6 +121,11 @@ These types are currently not used, but removing the a in front of them will cau
 ***********************
 ****** CHANGELOG ******
 ***********************
+v3.7.3
+
+	--Use physicsMass instead of constantly calculating part plus resource mass
+	--Remove excess DLLs from release zip
+
 v3.7.2
 
 	--Clean up joints when vessels go on-rails, decreasing chance of phantom forces
