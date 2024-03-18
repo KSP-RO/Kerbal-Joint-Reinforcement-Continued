@@ -155,11 +155,18 @@ namespace KerbalJointReinforcement
             List<ConfigurableJoint> configJointList;
             if (multiJointDict.TryGetValue(testPart, out configJointList))
             {
+                bool alreadyExists = false;
                 for (int i = configJointList.Count - 1; i >= 0; --i)
-                    if (configJointList[i] == null)
+                {
+                    ConfigurableJoint joint = configJointList[i];
+                    if (joint == null)
                         configJointList.RemoveAt(i);
 
-                configJointList.Add(multiJoint);
+                    alreadyExists |= joint == multiJoint;
+                }
+
+                if (!alreadyExists)
+                    configJointList.Add(multiJoint);
             }
             else
             {
