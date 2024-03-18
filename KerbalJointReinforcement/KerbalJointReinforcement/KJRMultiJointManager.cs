@@ -27,8 +27,6 @@ namespace KerbalJointReinforcement
     //If the joint from A to B or B to C is broken, this will destroy the joint A to C and then destroy itself
     class KJRMultiJointManager
     {
-        public static KJRMultiJointManager fetch;
-
         internal Dictionary<Part, List<ConfigurableJoint>> multiJointDict;
         private List<Part> linkPart1List;
         private List<Part> linkPart2List;
@@ -40,7 +38,6 @@ namespace KerbalJointReinforcement
             linkPart1List = new List<Part>();
             linkPart2List = new List<Part>();
             linkedSet = new HashSet<Part>();
-            fetch = this;
             GameEvents.onVesselCreate.Add(VesselCreate);
             GameEvents.onPartUndock.Add(OnJointBreak);
             GameEvents.onPartDie.Add(OnJointBreak);
