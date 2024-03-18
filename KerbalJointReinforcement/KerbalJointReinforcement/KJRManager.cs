@@ -294,7 +294,7 @@ namespace KerbalJointReinforcement
                     }
                 }
 
-                if (KJRJointUtils.settings.reinforceDecouplersFurther && IsValidDecoupler(p))
+                if (KJRJointUtils.settings.reinforceDecouplersFurther && p.isDecoupler(out _))
                 {
                     MultiJointReinforceDecoupler(p);
                     continue;
@@ -322,11 +322,6 @@ namespace KerbalJointReinforcement
 
             Profiler.EndSample();
             if (KJRJointUtils.settings.debug) Debug.Log($"[KJR] RunVesselJointUpdateFunction finished in {sw.Elapsed.TotalMilliseconds}ms");
-        }
-
-        private bool IsValidDecoupler(Part p)
-        {
-            return p.Modules.Contains<ModuleDecouple>() || p.Modules.Contains<ModuleAnchoredDecoupler>();
         }
 
         public void FixedUpdate()
