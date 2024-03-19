@@ -320,6 +320,9 @@ namespace KerbalJointReinforcement
             if (success || !child_parts)
                 updatedVessels.Add(v);
 
+            multiJointManager.ClearTempLists();
+            decouplerJointManager.ClearTempLists();
+
             Profiler.EndSample();
             if (KJRJointUtils.settings.debug) Debug.Log($"[KJR] RunVesselJointUpdateFunction finished in {sw.Elapsed.TotalMilliseconds}ms");
         }

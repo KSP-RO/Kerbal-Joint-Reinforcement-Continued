@@ -228,5 +228,12 @@ namespace KerbalJointReinforcement
                 multiJointDict.Remove(part);
             }
         }
+
+        public void ClearTempLists()
+        {
+            linkPart1List.Clear();
+            linkPart2List.Clear();
+            linkedSet.Clear();
+        }
     }
 }
