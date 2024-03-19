@@ -174,7 +174,7 @@ namespace KerbalJointReinforcement
                     if (p.attachJoint)
                         p.attachJoint.SetUnbreakable(true, false);
 
-                    if (p.Modules.Contains<LaunchClamp>())
+                    if (p.isLaunchClamp())
                     {
                         vesselHasLaunchClamps = true;
                         Joint[] partJoints = p.GetComponents<Joint>();
@@ -196,7 +196,7 @@ namespace KerbalJointReinforcement
                 for (int i = 0; i < v.Parts.Count; ++i)
                 {
                     Part p = v.Parts[i];
-                    if (p.Modules.Contains<LaunchClamp>())
+                    if (p.isLaunchClamp())
                     {
                         vesselHasLaunchClamps = true;
                         break;
@@ -301,7 +301,7 @@ namespace KerbalJointReinforcement
                 }
 
                 if ((KJRJointUtils.settings.reinforceLaunchClampsFurther || KJRJointUtils.settings.clampJointHasInfiniteStrength) &&
-                    p.parent != null && p.Modules.Contains<LaunchClamp>())
+                    p.parent != null && p.isLaunchClamp())
                 {
                     p.breakingForce = Mathf.Infinity;
                     p.breakingTorque = Mathf.Infinity;
@@ -405,7 +405,7 @@ namespace KerbalJointReinforcement
             StringBuilder debugString = KJRJointUtils.settings.debug ? new StringBuilder() : null;
 
             bool addAdditionalJointToParent = KJRJointUtils.settings.multiPartAttachNodeReinforcement;
-            //addAdditionalJointToParent &= !(p.Modules.Contains("LaunchClamp") || (p.parent.Modules.Contains("ModuleDecouple") || p.parent.Modules.Contains("ModuleAnchoredDecoupler")));
+            //addAdditionalJointToParent &= !(p.isLaunchClamp() || (p.parent.Modules.Contains("ModuleDecouple") || p.parent.Modules.Contains("ModuleAnchoredDecoupler")));
             addAdditionalJointToParent &= !p.Modules.Contains<CModuleStrut>();
 
             double partMass = p.physicsMass;
@@ -961,7 +961,7 @@ namespace KerbalJointReinforcement
             {
                 Part p = v.Parts[i];
                 if (p.rb != null &&
-                    p.children.Count == 0 && !p.Modules.Contains("LaunchClamp") &&
+                    p.children.Count == 0 && !p.isLaunchClamp() &&
                     p.physicsMass > KJRJointUtils.settings.massForAdjustment)
                 {
                     childPartsToConnect.Add(p);

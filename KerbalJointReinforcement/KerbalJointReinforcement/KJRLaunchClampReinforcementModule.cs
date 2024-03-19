@@ -159,7 +159,7 @@ namespace KerbalJointReinforcement
 
                 foreach (Part p in n.vessel.Parts)
                 {
-                    if (p.Modules.Contains<LaunchClamp>())
+                    if (p.isLaunchClamp())
                         continue;
 
                     ConfigurableJoint[] possibleConnections = p.GetComponents<ConfigurableJoint>();
