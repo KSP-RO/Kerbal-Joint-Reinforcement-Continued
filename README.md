@@ -1,4 +1,4 @@
-Kerbal Joint Reinforcement, v3.7.3
+Kerbal Joint Reinforcement, v3.7.4
 ==========================
 
 Physics stabilizer plugin for Kerbal Space Program
@@ -121,6 +121,10 @@ These types are currently not used, but removing the a in front of them will cau
 ***********************
 ****** CHANGELOG ******
 ***********************
+v3.7.4
+
+	--Fix inter-vessel joints getting created on decoupling
+
 v3.7.3
 
 	--Use physicsMass instead of constantly calculating part plus resource mass
