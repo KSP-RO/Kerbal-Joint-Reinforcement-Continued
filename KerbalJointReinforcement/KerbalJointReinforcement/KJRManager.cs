@@ -112,7 +112,8 @@ namespace KerbalJointReinforcement
             if (v is null || v.isEVA)
                 return;
 
-            if (!v.rootPart.started)
+            if (!v.rootPart.started ||
+                v.protoVessel == null)    // This handles decoupling where the parent part of the decoupler hasn't yet been updated and thus references the part on original vessel
             {
                 // Need to guard against this event getting called too early in the vessel lifecycle. 
                 // It can take a few frames before rigidbodies and stock joints are created.
