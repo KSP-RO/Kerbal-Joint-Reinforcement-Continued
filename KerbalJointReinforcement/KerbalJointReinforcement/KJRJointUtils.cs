@@ -56,28 +56,11 @@ namespace KerbalJointReinforcement
                     return false;
             }
 
-            for (int i = 0; i < settings.exemptPartTypes.Count; i++)
-            {
-                string s = settings.exemptPartTypes[i];
-                if (p.PartAttributes.className == s)
-                    return false;
-            }
-
             return true;
         }
 
         public static bool GetsDecouplerStiffeningExtension(Part p)
         {
-            string typeString = p.GetType().ToString();
-
-            foreach (string s in settings.decouplerStiffeningExtensionType)
-            {
-                if (typeString == s)
-                {
-                    return true;
-                }
-            }
-
             foreach (string s in settings.decouplerStiffeningExtensionType)
             {
                 if (p.Modules.Contains(s))
@@ -216,10 +199,6 @@ namespace KerbalJointReinforcement
                 debugString.AppendLine("Use Volume For Calculations, Not Area: " + settings.useVolumeNotArea);
 
                 debugString.AppendLine("\n\rMass For Joint Adjustment: " + settings.massForAdjustment);
-
-                debugString.AppendLine("\n\rExempt Part Types");
-                foreach (string s in settings.exemptPartTypes)
-                    debugString.AppendLine(s);
 
                 debugString.AppendLine("\n\rExempt Module Types");
                 foreach (string s in settings.exemptModuleTypes)

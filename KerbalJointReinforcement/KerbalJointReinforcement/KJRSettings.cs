@@ -61,7 +61,6 @@ namespace KerbalJointReinforcement
 
         internal float massForAdjustment = 0.001f;
 
-        internal List<string> exemptPartTypes = new List<string>();
         internal List<string> exemptModuleTypes = new List<string>();
         internal List<string> decouplerStiffeningExtensionType = new List<string>();
 
@@ -105,23 +104,19 @@ namespace KerbalJointReinforcement
 
             massForAdjustment = config.GetValue(nameof(massForAdjustment), massForAdjustment);
 
-            exemptPartTypes.Clear();
             exemptModuleTypes.Clear();
             decouplerStiffeningExtensionType.Clear();
 
             int i = 0;
             do
             {
-                string tmpPart, tmpModule, tmpDecoupler;
-                tmpPart = config.GetValue("exemptPartType" + i, "");
+                string tmpModule, tmpDecoupler;
                 tmpModule = config.GetValue("exemptModuleType" + i, "");
                 tmpDecoupler = config.GetValue("decouplerStiffeningExtensionType" + i, "");
 
-                if (tmpPart == "" && tmpModule == "" && tmpDecoupler == "")
+                if (tmpModule == "" && tmpDecoupler == "")
                     break;
 
-                if (tmpPart != "")
-                    exemptPartTypes.Add(tmpPart);
                 if (tmpModule != "")
                     exemptModuleTypes.Add(tmpModule);
                 if (tmpDecoupler != "")
