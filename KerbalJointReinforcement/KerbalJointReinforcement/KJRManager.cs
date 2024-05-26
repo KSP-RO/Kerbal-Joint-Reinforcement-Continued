@@ -372,7 +372,7 @@ namespace KerbalJointReinforcement
             if (p.Modules.GetModule<CModuleStrut>() is CModuleStrut s &&
                 s.jointTarget != null && s.jointRoot != null)
             {
-                jointList = KJRJointUtils.GetJointListFromAttachJoint(s.strutJoint);
+                jointList = s.strutJoint.joints;
 
                 if (jointList != null)
                 {
@@ -400,9 +400,8 @@ namespace KerbalJointReinforcement
                     p.attachMethod = AttachNodeMethod.LOCKED_JOINT;
                 }
             }
-            
 
-            jointList = KJRJointUtils.GetJointListFromAttachJoint(p.attachJoint);
+            jointList = p.attachJoint.joints;
             if (jointList == null)
                 return;
 
@@ -419,9 +418,7 @@ namespace KerbalJointReinforcement
                 if (j == null)
                     continue;
 
-                String jointType = j.GetType().Name;
                 Rigidbody connectedBody = j.connectedBody;
-
                 Part connectedPart = connectedBody.GetComponent<Part>() ?? p.parent;
                 double parentMass = connectedPart.physicsMass;
 
@@ -472,7 +469,7 @@ namespace KerbalJointReinforcement
 
                     debugString.AppendLine("Std. Joint Parameters");
                     debugString.AppendLine("Connected Body: " + p.attachJoint.Joint.connectedBody);
-                    debugString.AppendLine("Attach mode: " + p.attachMode + " (was " + jointType + ")");
+                    debugString.AppendLine("Attach mode: " + p.attachMode);
                     if (attach != null)
                         debugString.AppendLine("Attach node: " + attach.id + " - " + attach.nodeType + " " + attach.size);
                     if (p_attach != null)
@@ -823,7 +820,7 @@ namespace KerbalJointReinforcement
 
                     debugString.AppendLine("Std. Joint Parameters");
                     debugString.AppendLine("Connected Body: " + p.attachJoint.Joint.connectedBody);
-                    debugString.AppendLine("Attach mode: " + p.attachMode + " (was " + jointType + ")");
+                    debugString.AppendLine("Attach mode: " + p.attachMode);
                     if (attach != null)
                         debugString.AppendLine("Attach node: " + attach.id + " - " + attach.nodeType + " " + attach.size);
                     if (p_attach != null)

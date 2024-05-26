@@ -31,9 +31,6 @@
     <string name="decouplerStiffeningExtensionType2">ModuleHybridEngine</string>
     <string name="decouplerStiffeningExtensionType3">ModuleHybridEngines</string>
     <string name="decouplerStiffeningExtensionType4">ModuleEngineConfigs</string>
-    <string name="adecouplerStiffeningExtensionType5">ModuleDecouple</string>
-    <string name="adecouplerStiffeningExtensionType6">ModuleAnchoredDecoupler</string>
-    <string name="adecouplerStiffeningExtensionType7">ProceduralFairingBase</string>
 
     <float name="stiffeningExtensionMassRatioThreshold">5</float>
 </config>

@@ -28,25 +28,6 @@ namespace KerbalJointReinforcement
     {
         public static KJRSettings settings;
 
-        public static List<ConfigurableJoint> GetJointListFromAttachJoint(PartJoint partJoint)
-        {
-            /*FieldInfo[] fields = partJoint.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
-            List<ConfigurableJoint> jointList = new List<ConfigurableJoint>();
-            Type jointListType = jointList.GetType();
-
-            for (int i = 0; i < fields.Length; i++)
-            {
-                FieldInfo field = fields[i];
-                if (field.FieldType == jointListType)
-                {
-                    return (List<ConfigurableJoint>)field.GetValue(partJoint);
-
-                }
-            }*/
-
-            return partJoint.joints;
-        }
-
         public static bool IsJointAdjustmentValid(Part p)
         {
             for (int i = 0; i < p.Modules.Count; i++)
