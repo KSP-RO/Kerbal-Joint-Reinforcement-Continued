@@ -1,4 +1,4 @@
-Kerbal Joint Reinforcement, v3.7.4
+Kerbal Joint Reinforcement, v3.7.5
 ==========================
 
 Physics stabilizer plugin for Kerbal Space Program
@@ -89,9 +89,6 @@ Part and Module Exemptions
 
 	Type	Name				Default Value		Action
 
-	string	exemptPartType0			MuMechToggle		--Part stiffening not applied to this type of "Part"; exemption to avoid interference with Infernal Robotics
-	string	exemptPartType1			MuMechServo		--Part stiffening not applied to this type of "Part"; exemption to avoid interference with Infernal Robotics
-
 	string	exemptModuleType0		WingManipulator		--Part stiffening not applied to parts with this type of PartModule; exemption to prevent problems with pWings
 	string	exemptModuleType1		SingleGroupMan		--Part stiffening not applied to parts with this type of PartModule; exemption to prevent problems with procedural adapter included with pWings
 	string	exemptModuleType2		KerbalEVA		--Part stiffening not applied to parts with this type of PartModule; exemption to prevent problems with Kerbals in command seats
@@ -111,16 +108,16 @@ Decoupler Stiffening Extension Types
 	string	decouplerStiffeningExtensionType3	ModuleHybridEngines	--Decoupler stiffening will look for parts beyond this part type to add to stiffening
 	string	decouplerStiffeningExtensionType4	ModuleEngineConfigs	--Decoupler stiffening will look for parts beyond this part type to add to stiffening
 
-These types are currently not used, but removing the a in front of them will cause KJR to make use of them again; their lack should not affect stiffening appreciably but does help reduce overhead and strange stiffening situations
-
-	string	adecouplerStiffeningExtensionType5	ModuleDecouple		--Decoupler stiffening will look for parts beyond this part type to add to stiffening
-	string	adecouplerStiffeningExtensionType6	ModuleAnchoredDecoupler	--Decoupler stiffening will look for parts beyond this part type to add to stiffening
-	string	adecouplerStiffeningExtensionType7	ProceduralFairingBase	--Decoupler stiffening will look for parts beyond this part type to add to stiffening
-
 
 ***********************
 ****** CHANGELOG ******
 ***********************
+v3.7.5
+
+	--Fix another case of inter-vessel joints getting created on decoupling
+	--Remove exemptPartTypes logic since derived part types aren't used in practice
+	--Some code and config cleanup
+
 v3.7.4
 
 	--Fix inter-vessel joints getting created on decoupling
