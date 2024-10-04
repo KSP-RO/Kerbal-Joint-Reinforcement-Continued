@@ -30,11 +30,11 @@ namespace KerbalJointReinforcement
         public bool reinforceDecouplersFurther = true;
 
         [GameParameters.CustomParameterUI("Toggle stiffening of launch clamp connections", autoPersistance = false)]
-        public bool reinforceLaunchClampsFurther = true;
+        public bool reinforceLaunchClampsFurther = false;
 
-        [GameParameters.CustomParameterUI("Toggle clamp connections that are completely rigid", autoPersistance = false,
-            toolTip = "With this option enabled, even the heaviest of rockets shouldn't move a millimeter when loaded onto the launch pad")]
-        public bool clampJointHasInfiniteStrength = false;
+        [GameParameters.CustomParameterUI("Attach vessel to ground", autoPersistance = false,
+            toolTip = "Connects the heaviest parts of the vessel directly to ground if it is waiting to be launched and has launch clamps")]
+        public bool worldSpaceJoints = true;
 
         [GameParameters.CustomParameterUI("Calculate by area", autoPersistance = false,
             toolTip = "Switches to calculating connection area based on volume, not area; not technically correct, but allows a better approximation of very large rockets")]
@@ -81,8 +81,8 @@ namespace KerbalJointReinforcement
             reinforceAttachNodes = config.GetValue(nameof(reinforceAttachNodes), true);
             multiPartAttachNodeReinforcement = config.GetValue(nameof(multiPartAttachNodeReinforcement), true);
             reinforceDecouplersFurther = config.GetValue(nameof(reinforceDecouplersFurther), true);
-            reinforceLaunchClampsFurther = config.GetValue(nameof(reinforceLaunchClampsFurther), true);
-            clampJointHasInfiniteStrength = config.GetValue(nameof(clampJointHasInfiniteStrength), false);
+            reinforceLaunchClampsFurther = config.GetValue(nameof(reinforceLaunchClampsFurther), false);
+            worldSpaceJoints = config.GetValue(nameof(worldSpaceJoints), true);
             useVolumeNotArea = config.GetValue(nameof(useVolumeNotArea), true);
             debug = config.GetValue(nameof(debug), false);
 
@@ -139,7 +139,7 @@ namespace KerbalJointReinforcement
                     isDirty |= UpdateConfigValue(config, "multiPartAttachNodeReinforcement", multiPartAttachNodeReinforcement);
                     isDirty |= UpdateConfigValue(config, "reinforceDecouplersFurther", reinforceDecouplersFurther);
                     isDirty |= UpdateConfigValue(config, "reinforceLaunchClampsFurther", reinforceLaunchClampsFurther);
-                    isDirty |= UpdateConfigValue(config, "clampJointHasInfiniteStrength", clampJointHasInfiniteStrength);
+                    isDirty |= UpdateConfigValue(config, "worldSpaceJoints", worldSpaceJoints);
                     isDirty |= UpdateConfigValue(config, "useVolumeNotArea", useVolumeNotArea);
                     isDirty |= UpdateConfigValue(config, "debug", debug);
 
