@@ -152,7 +152,6 @@ namespace KerbalJointReinforcement
         public static void AddLaunchClampReinforcementModule(Part p)
         {
             var pm = (KJRLaunchClampReinforcementModule)p.AddModule(nameof(KJRLaunchClampReinforcementModule));
-            pm.clampJointHasInfiniteStrength = settings.clampJointHasInfiniteStrength;
             pm.OnPartUnpack();
             if (settings.debug)
                 Debug.Log("[KJR] Added KJRLaunchClampReinforcementModule to part " + p.partInfo.title);
@@ -176,7 +175,7 @@ namespace KerbalJointReinforcement
                 debugString.AppendLine("Reinforce Attach Nodes: " + settings.reinforceAttachNodes);
                 debugString.AppendLine("Reinforce Decouplers Further: " + settings.reinforceDecouplersFurther);
                 debugString.AppendLine("Reinforce Launch Clamps Further: " + settings.reinforceLaunchClampsFurther);
-                debugString.AppendLine("Clamp Joint Has Infinite Strength: " + settings.clampJointHasInfiniteStrength);
+                debugString.AppendLine("World Space Joints: " + settings.worldSpaceJoints);
                 debugString.AppendLine("Use Volume For Calculations, Not Area: " + settings.useVolumeNotArea);
 
                 debugString.AppendLine("\n\rMass For Joint Adjustment: " + settings.massForAdjustment);

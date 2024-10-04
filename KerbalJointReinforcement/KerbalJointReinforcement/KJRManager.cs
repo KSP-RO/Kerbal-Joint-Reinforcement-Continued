@@ -168,7 +168,6 @@ namespace KerbalJointReinforcement
             {
                 Debug.Log("[KJR] easing " + v.vesselName);
                 vesselOffRails.Add(v);
-                List<Joint> jointList = new List<Joint>();
                 for (int i = 0; i < v.Parts.Count; ++i)
                 {
                     Part p = v.Parts[i];
@@ -184,7 +183,6 @@ namespace KerbalJointReinforcement
                         {
                             if (j.connectedBody == null)
                             {
-                                jointList.Remove(j);
                                 GameObject.Destroy(j);
                                 KJRJointUtils.ConnectLaunchClampToGround(p);
                                 break;
@@ -278,8 +276,10 @@ namespace KerbalJointReinforcement
                 Debug.Log($"[KJR] Processing vessel {v.id} ({v.GetName()}); root {v.rootPart.partInfo.name} ({v.rootPart.flightID})");
             }
 
+            bool shouldProcessClamps = v.LandedOrSplashed && (KJRJointUtils.settings.worldSpaceJoints || KJRJointUtils.settings.reinforceLaunchClampsFurther);
             bool child_parts = false;
             bool success = false;
+            var clampParts = new List<Part>();
 
             foreach (Part p in v.Parts)
             {
@@ -302,17 +302,14 @@ namespace KerbalJointReinforcement
                     continue;
                 }
 
-                if ((KJRJointUtils.settings.reinforceLaunchClampsFurther || KJRJointUtils.settings.clampJointHasInfiniteStrength) &&
-                    p.parent != null && p.isLaunchClamp())
+                if (shouldProcessClamps && p.isLaunchClamp())
                 {
-                    p.breakingForce = Mathf.Infinity;
-                    p.breakingTorque = Mathf.Infinity;
-                    p.mass = (float)Math.Max(p.physicsMass, p.parent.physicsMass * 0.01);    //We do this to make sure that there is a mass ratio of 100:1 between the clamp and what it's connected to.  This helps counteract some of the wobbliness simply, but also allows some give and springiness to absorb the initial physics kick
-                    if (KJRJointUtils.settings.debug)
-                        Debug.Log("[KJR] Launch Clamp Break Force / Torque increased");
+                    clampParts.Add(p);
 
-                    if (!p.Modules.Contains<KJRLaunchClampReinforcementModule>())
-                        KJRJointUtils.AddLaunchClampReinforcementModule(p);
+                    if (KJRJointUtils.settings.reinforceLaunchClampsFurther && p.parent != null)
+                    {
+                        ReinforceClamps(p);
+                    }
                 }
             }
 
@@ -324,6 +321,11 @@ namespace KerbalJointReinforcement
 
             multiJointManager.ClearTempLists();
             decouplerJointManager.ClearTempLists();
+
+            if (KJRJointUtils.settings.worldSpaceJoints && clampParts.Count > 0)
+            {
+                HandleWorldSpaceJoints(v, clampParts);
+            }
 
             Profiler.EndSample();
             if (KJRJointUtils.settings.debug) Debug.Log($"[KJR] RunVesselJointUpdateFunction finished in {sw.Elapsed.TotalMilliseconds}ms");
@@ -1051,6 +1053,31 @@ namespace KerbalJointReinforcement
                     //multiJointManager.RegisterMultiJoint(p, toRootJoint);
                     //multiJointManager.RegisterMultiJoint(v.rootPart, toRootJoint);
                 }
+            }
+        }
+
+        private void ReinforceClamps(Part p)
+        {
+            p.breakingForce = Mathf.Infinity;
+            p.breakingTorque = Mathf.Infinity;
+            p.mass = (float)Math.Max(p.physicsMass, p.parent.physicsMass * 0.01);    //We do this to make sure that there is a mass ratio of 100:1 between the clamp and what it's connected to.  This helps counteract some of the wobbliness simply, but also allows some give and springiness to absorb the initial physics kick
+            if (KJRJointUtils.settings.debug)
+                Debug.Log("[KJR] Launch Clamp Break Force / Torque increased");
+
+            if (!p.Modules.Contains<KJRLaunchClampReinforcementModule>())
+                KJRJointUtils.AddLaunchClampReinforcementModule(p);
+        }
+
+        private void HandleWorldSpaceJoints(Vessel v, List<Part> clampParts)
+        {
+            Part p = v.rootPart;
+            if (!p.Modules.Contains<KJRGroundJointModule>())
+            {
+                var pm = (KJRGroundJointModule)p.AddModule(nameof(KJRGroundJointModule));
+                pm.Init(clampParts);
+                pm.OnPartUnpack();
+                if (KJRJointUtils.settings.debug)
+                    Debug.Log("[KJR] Added KJRGroundJointModule to part " + p.partInfo.title);
             }
         }
 

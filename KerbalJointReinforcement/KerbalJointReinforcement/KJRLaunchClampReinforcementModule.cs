@@ -28,20 +28,15 @@ namespace KerbalJointReinforcement
     //This class adds an extra joint between a launch clamp and the part it is connected to for stiffness
     public class KJRLaunchClampReinforcementModule : PartModule
     {
-        public bool clampJointHasInfiniteStrength = false;
-
-        private bool createHackedJoints = false;
         bool alreadyUnpacked = false;
         private bool subscribedToEvents = false;
         private List<ConfigurableJoint> joints;
-        private List<ConfigurableJoint> hackedJoints;
         private List<Part> neighbours = new List<Part>();
 
         public override void OnAwake()
         {
             base.OnAwake();
             joints = new List<ConfigurableJoint>();
-            hackedJoints = new List<ConfigurableJoint>();
         }
 
         public void OnPartUnpack()
@@ -61,15 +56,7 @@ namespace KerbalJointReinforcement
 
             if (part.parent.Rigidbody != null)
             {
-                if (clampJointHasInfiniteStrength)
-                {
-                    createHackedJoints = true;
-                    StartCoroutine(CreateInfiniteStrengthJointRoutine());
-                }
-                else
-                {
-                    StrutConnectParts(part, part.parent);
-                }
+                StrutConnectParts(part, part.parent);
             }
 
             if (KJRJointUtils.settings.debug)
@@ -78,7 +65,7 @@ namespace KerbalJointReinforcement
                 Debug.Log(debugString.ToString());
             }
 
-            if (joints.Count > 0 || createHackedJoints)
+            if (joints.Count > 0)
             {
                 GameEvents.onVesselWasModified.Add(OnVesselWasModified);
                 subscribedToEvents = true;
@@ -87,14 +74,6 @@ namespace KerbalJointReinforcement
 
         private void OnVesselWasModified(Vessel v)
         {
-            // When cheating a vessel into orbit, checking whether the clamp is on a different vessel (decoupled) does not work.
-            // So hacked joints need to be destroyed without the checks below, otherwise an extremely nasty Kraken attack will ensue.
-            foreach (ConfigurableJoint hj in hackedJoints)
-                GameObject.Destroy(hj);
-
-            hackedJoints.Clear();
-            createHackedJoints = false;
-
             foreach (Part p in neighbours)
             {
                 if (p.vessel == part.vessel)
@@ -117,15 +96,10 @@ namespace KerbalJointReinforcement
             }
 
             foreach (ConfigurableJoint j in joints)
-                GameObject.Destroy(j);
-
-            foreach (ConfigurableJoint hj in hackedJoints)
-                GameObject.Destroy(hj);
+                Destroy(j);
 
             joints.Clear();
-            hackedJoints.Clear();
             neighbours.Clear();
-            createHackedJoints = false;
             alreadyUnpacked = false;
         }
 
@@ -144,7 +118,7 @@ namespace KerbalJointReinforcement
             subscribedToEvents = false;
 
             foreach (ConfigurableJoint j in joints)
-                GameObject.Destroy(j);
+                Destroy(j);
 
             joints.Clear();
 
@@ -171,12 +145,12 @@ namespace KerbalJointReinforcement
                     {
                         if (j.connectedBody == null)
                         {
-                            GameObject.Destroy(j);
+                            Destroy(j);
                             continue;
                         }
                         Part cp = j.connectedBody.GetComponent<Part>();
                         if (cp != null && cp.vessel != p.vessel)
-                            GameObject.Destroy(j);
+                            Destroy(j);
                     }
                 }
             }
@@ -205,45 +179,6 @@ namespace KerbalJointReinforcement
             newJoint.angularXMotion = newJoint.angularYMotion = newJoint.angularZMotion = ConfigurableJointMotion.Locked;
 
             joints.Add(newJoint);
-        }
-
-        private IEnumerator CreateInfiniteStrengthJointRoutine()
-        {
-            const int maxFramesWaited = 250;
-            int i = 0;
-            do
-            {
-                yield return new WaitForFixedUpdate();
-            } while (part.vessel.packed && i++ < maxFramesWaited);
-
-            if (part.parent != null && part.parent.Rigidbody != null)
-            {
-                CreateInfiniteStrengthJoint(part.parent);
-            }
-        }
-
-        private void CreateInfiniteStrengthJoint(Part parentOfClamp)
-        {
-            Vector3 anchor, axis;
-            anchor = Vector3.zero;
-            axis = Vector3.right;
-
-            // Adding a joint that connects the parent part to itself. 
-            // This causes Unity to bug out slightly and the connection between clamp and it's parent becomes completely rigid.
-            Debug.Log("[KJR] Ignore the illegal joint error below, this is supposed to happen: ");
-            ConfigurableJoint newJoint = parentOfClamp.gameObject.AddComponent<ConfigurableJoint>();
-            newJoint.connectedBody = parentOfClamp.rb;
-            newJoint.anchor = anchor;
-            newJoint.axis = axis;
-            newJoint.secondaryAxis = Vector3.forward;
-            newJoint.breakForce = Mathf.Infinity;
-            newJoint.breakTorque = Mathf.Infinity;
-
-            newJoint.xMotion = newJoint.yMotion = newJoint.zMotion = ConfigurableJointMotion.Locked;
-            newJoint.angularXMotion = newJoint.angularYMotion = newJoint.angularZMotion = ConfigurableJointMotion.Locked;
-            newJoint.projectionMode = JointProjectionMode.PositionAndRotation;
-
-            hackedJoints.Add(newJoint);
         }
     }
 }
