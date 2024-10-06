@@ -68,6 +68,12 @@ namespace KerbalJointReinforcement
             {
                 GameEvents.onVesselWasModified.Add(OnVesselWasModified);
                 subscribedToEvents = true;
+
+                // By the time the code gets here, the stock CheckGroundCollision() method has been run at least once.
+                // With the extra world-space joints, it's safe to make the assumption that the vessel will
+                // never shift in a significant way so any further collision checks aren't necessary.
+                // This also means that stock code will no longer shift the vessel up or down when coming off rails.
+                vessel.skipGroundPositioning = true;
             }
             else
             {
