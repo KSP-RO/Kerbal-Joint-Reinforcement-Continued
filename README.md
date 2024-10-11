@@ -112,6 +112,10 @@ Decoupler Stiffening Extension Types
 ***********************
 ****** CHANGELOG ******
 ***********************
+v3.8.1
+
+	--Fix issues with cheating vessels into orbit
+
 v3.8.0
 
 	--Add option to connect the heaviest parts of the vessel directly to ground. Replaces the lampJointHasInfiniteStrength option.

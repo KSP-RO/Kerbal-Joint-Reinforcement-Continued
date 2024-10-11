@@ -12,11 +12,13 @@ namespace KerbalJointReinforcement
         private List<Part> clampParts;
         private Dictionary<Part, FixedJoint> joints = new Dictionary<Part, FixedJoint>();
         private bool alreadyUnpacked = false;
-        private bool subscribedToEvents = false;
+        private bool subscribedToVesselModifEvent = false;
 
         public void Init(List<Part> clampParts)
         {
             this.clampParts = clampParts;
+
+            GameEvents.onPartDie.Add(OnPartDie);
 
             Part[] orderedParts = vessel.parts.OrderByDescending(p => p.physicsMass).ToArray();
             int i = 0;
@@ -67,7 +69,7 @@ namespace KerbalJointReinforcement
             if (joints.Count > 0)
             {
                 GameEvents.onVesselWasModified.Add(OnVesselWasModified);
-                subscribedToEvents = true;
+                subscribedToVesselModifEvent = true;
 
                 // By the time the code gets here, the stock CheckGroundCollision() method has been run at least once.
                 // With the extra world-space joints, it's safe to make the assumption that the vessel will
@@ -83,7 +85,17 @@ namespace KerbalJointReinforcement
 
         private void OnVesselWasModified(Vessel v)
         {
-            BreakAllInvalidJoints();
+            if (v == vessel)
+                BreakAllInvalidJoints();
+        }
+
+        private void OnPartDie(Part p)
+        {
+            if (clampParts.Contains(p))
+            {
+                clampParts.Remove(p);
+                BreakAllInvalidJoints();
+            }
         }
 
         private void BreakAllInvalidJoints()
@@ -104,10 +116,10 @@ namespace KerbalJointReinforcement
 
         public void OnPartPack()
         {
-            if (subscribedToEvents)
+            if (subscribedToVesselModifEvent)
             {
                 GameEvents.onVesselWasModified.Remove(OnVesselWasModified);
-                subscribedToEvents = false;
+                subscribedToVesselModifEvent = false;
             }
 
             foreach (FixedJoint j in joints.Values)
@@ -119,10 +131,12 @@ namespace KerbalJointReinforcement
 
         public void OnDestroy()
         {
-            if (subscribedToEvents)
+            if (subscribedToVesselModifEvent)
             {
                 GameEvents.onVesselWasModified.Remove(OnVesselWasModified);
             }
+
+            GameEvents.onPartDie.Remove(OnPartDie);
 
             foreach (FixedJoint j in joints.Values)
                 Destroy(j);
