@@ -28,7 +28,8 @@ namespace KerbalJointReinforcement
                 Part mPart = orderedParts[i];
                 i++;
 
-                if (clampParts.Contains(mPart) || pickedMassiveParts.Contains(mPart))
+                if (mPart.physicalSignificance == Part.PhysicalSignificance.NONE ||
+                    clampParts.Contains(mPart) || pickedMassiveParts.Contains(mPart))
                     continue;
 
                 pickedMassiveParts.Add(mPart);
