@@ -147,6 +147,13 @@ namespace KerbalJointReinforcement
                 yield return new WaitUntil(() => !isEVAConstructionModeActive);
             }
 
+            while (v.rootPart.physicsMass == 0)
+            {
+                if (KJRJointUtils.settings.debug)
+                    Debug.Log("[KJR] Waiting for root part to obtain physicsMass");
+                yield return new WaitForEndOfFrame();
+            }
+
             // Try to update the joints only once on a vessel that has changed multiple times during EVA Construction
             if (!updatedVessels.Contains(v))
                 RunVesselJointUpdateFunction(v);
