@@ -112,6 +112,15 @@ Decoupler Stiffening Extension Types
 ***********************
 ****** CHANGELOG ******
 ***********************
+v3.8.4
+
+	--Fix the dry-wet mass ratio checks
+
+v3.8.3
+
+	--Exclude physicsless parts from ground joints
+	--Fix cases where part physicsMass isn't initialized yet
+
 v3.8.2
 
 	--Remove the skipGroundPositioning cleverness

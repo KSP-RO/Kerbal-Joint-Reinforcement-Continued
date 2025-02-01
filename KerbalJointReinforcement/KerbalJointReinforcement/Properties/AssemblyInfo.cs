@@ -11,7 +11,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("ferram4, KSP-RO")]
 [assembly: AssemblyProduct("KerbalJointReinforcement")]
-[assembly: AssemblyCopyright("Copyright © ferram4, KSP-RO 2023")]
+[assembly: AssemblyCopyright("Copyright © ferram4, KSP-RO 2025")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
