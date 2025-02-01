@@ -696,11 +696,11 @@ namespace KerbalJointReinforcement
                     do
                     {
                         double massRat1, massRat2;
-                        massRat1 = partMaxMass / newConnectedPart.physicsMass;
+                        massRat1 = partMaxMass / newConnectedPart.mass;
                         if (massRat1 < 1)
                             massRat1 = 1 / massRat1;
 
-                        massRat2 = p.physicsMass / newConnectedPart.physicsMass;
+                        massRat2 = p.mass / newConnectedPart.physicsMass;
                         if (massRat2 < 1)
                             massRat2 = 1 / massRat2;
 
