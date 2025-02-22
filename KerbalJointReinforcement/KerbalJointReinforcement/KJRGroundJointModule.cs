@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -12,6 +13,7 @@ namespace KerbalJointReinforcement
         private List<Part> clampParts;
         private Dictionary<Part, FixedJoint> joints = new Dictionary<Part, FixedJoint>();
         private bool alreadyUnpacked = false;
+        private int partCount;
         private bool subscribedToVesselModifEvent = false;
 
         public void Init(List<Part> clampParts)
@@ -49,6 +51,24 @@ namespace KerbalJointReinforcement
                 return;
 
             alreadyUnpacked = true;
+            partCount = vessel.parts.Count;
+
+            StartCoroutine(Bleh());
+        }
+
+        private IEnumerator Bleh()
+        {
+            yield return new WaitForFixedUpdate();
+            yield return new WaitForFixedUpdate();
+            yield return new WaitForFixedUpdate();
+            yield return new WaitForFixedUpdate();
+            yield return new WaitForFixedUpdate();
+
+            if (partCount != vessel.parts.Count)
+            {
+                part.RemoveModule(this);
+                yield break;
+            }
 
             foreach (Part part in pickedMassiveParts)
             {
