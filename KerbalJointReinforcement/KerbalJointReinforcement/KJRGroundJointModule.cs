@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -12,6 +13,7 @@ namespace KerbalJointReinforcement
         private List<Part> clampParts;
         private Dictionary<Part, FixedJoint> joints = new Dictionary<Part, FixedJoint>();
         private bool alreadyUnpacked = false;
+        private int partCount;
         private bool subscribedToVesselModifEvent = false;
 
         public void Init(List<Part> clampParts)
@@ -49,6 +51,35 @@ namespace KerbalJointReinforcement
                 return;
 
             alreadyUnpacked = true;
+            partCount = vessel.parts.Count;
+
+            StartCoroutine(CreateJointsOncePhysicsKicksIn());
+        }
+
+        private IEnumerator CreateJointsOncePhysicsKicksIn()
+        {
+            const int maxFrames = 1000;
+            int i = 0;
+            while (i++ < maxFrames && vessel.HoldPhysics)
+            {
+                if (KJRJointUtils.settings.debug)
+                    Debug.Log($"[KJR] GroundJointModule: wait frame {i}");
+                yield return new WaitForFixedUpdate();
+            }
+
+            if (vessel.HoldPhysics)
+            {
+                Debug.LogWarning($"[KJR] GroundJointModule: reached max wait of {maxFrames} frames but phys hold is still active");
+                part.RemoveModule(this);
+                yield break;
+            }
+
+            if (partCount != vessel.parts.Count)
+            {
+                Debug.Log($"[KJR] GroundJointModule: part count changed: {partCount} != {vessel.parts.Count}");
+                part.RemoveModule(this);
+                yield break;
+            }
 
             foreach (Part part in pickedMassiveParts)
             {
