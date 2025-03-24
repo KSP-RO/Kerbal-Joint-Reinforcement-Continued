@@ -112,6 +112,10 @@ Decoupler Stiffening Extension Types
 ***********************
 ****** CHANGELOG ******
 ***********************
+v3.8.5
+
+	--Add delay to creating ground joints
+
 v3.8.4
 
 	--Fix the dry-wet mass ratio checks
