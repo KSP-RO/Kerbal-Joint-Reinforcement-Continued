@@ -20,7 +20,7 @@ namespace KerbalJointReinforcement
         {
             this.clampParts = clampParts;
 
-            GameEvents.onPartDie.Add(OnPartDie);
+            GameEvents.onPartDie.Add(OnPartDie2);
 
             Part[] orderedParts = vessel.parts.OrderByDescending(p => p.physicsMass).ToArray();
             int i = 0;
@@ -115,7 +115,8 @@ namespace KerbalJointReinforcement
                 BreakAllInvalidJoints();
         }
 
-        private void OnPartDie(Part p)
+        // Turns out there's a Unity event with the same name - thus the weird number at the end
+        private void OnPartDie2(Part p)
         {
             if (clampParts.Contains(p))
             {
@@ -162,7 +163,7 @@ namespace KerbalJointReinforcement
                 GameEvents.onVesselWasModified.Remove(OnVesselWasModified);
             }
 
-            GameEvents.onPartDie.Remove(OnPartDie);
+            GameEvents.onPartDie.Remove(OnPartDie2);
 
             foreach (FixedJoint j in joints.Values)
                 Destroy(j);
