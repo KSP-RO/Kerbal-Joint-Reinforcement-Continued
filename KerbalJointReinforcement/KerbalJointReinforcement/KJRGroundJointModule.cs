@@ -8,7 +8,7 @@ namespace KerbalJointReinforcement
     public class KJRGroundJointModule : PartModule
     {
         private const int PartsToPick = 3;
-
+        private const int MaxDistanceFromOrigin = 500;
         private List<Part> pickedMassiveParts = new List<Part>();
         private List<Part> clampParts;
         private Dictionary<Part, FixedJoint> joints = new Dictionary<Part, FixedJoint>();
@@ -81,6 +81,13 @@ namespace KerbalJointReinforcement
                 yield break;
             }
 
+            if (vessel.transform.position.magnitude > MaxDistanceFromOrigin)
+            {
+                Debug.Log($"[KJR] Vessel {vessel.vesselName} is {vessel.transform.position.magnitude:N0}m from origin, skipping ground joint creation");
+                part.RemoveModule(this);
+                yield break;
+            }
+
             foreach (Part part in pickedMassiveParts)
             {
                 if (part == null) continue;
@@ -101,6 +108,7 @@ namespace KerbalJointReinforcement
             if (joints.Count > 0)
             {
                 GameEvents.onVesselWasModified.Add(OnVesselWasModified);
+                GameEvents.onFloatingOriginShift.Add(OnFloatingOriginShift);
                 subscribedToVesselModifEvent = true;
             }
             else
@@ -113,6 +121,18 @@ namespace KerbalJointReinforcement
         {
             if (v == vessel)
                 BreakAllInvalidJoints();
+        }
+
+        private void OnFloatingOriginShift(Vector3d offset, Vector3d nonFrame)
+        {
+            Debug.Log($"[KJR] Floating orign shifted, undoing ground joints on vessel {vessel.vesselName}");
+
+            foreach (var kvp in joints)
+            {
+                Destroy(kvp.Value);
+            }
+
+            part.RemoveModule(this);
         }
 
         // Turns out there's a Unity event with the same name - thus the weird number at the end
@@ -146,6 +166,7 @@ namespace KerbalJointReinforcement
             if (subscribedToVesselModifEvent)
             {
                 GameEvents.onVesselWasModified.Remove(OnVesselWasModified);
+                GameEvents.onFloatingOriginShift.Remove(OnFloatingOriginShift);
                 subscribedToVesselModifEvent = false;
             }
 
@@ -161,6 +182,7 @@ namespace KerbalJointReinforcement
             if (subscribedToVesselModifEvent)
             {
                 GameEvents.onVesselWasModified.Remove(OnVesselWasModified);
+                GameEvents.onFloatingOriginShift.Remove(OnFloatingOriginShift);
             }
 
             GameEvents.onPartDie.Remove(OnPartDie2);
