@@ -112,6 +112,11 @@ Decoupler Stiffening Extension Types
 ***********************
 ****** CHANGELOG ******
 ***********************
+v3.8.6
+
+	--Protect ground joints against origin shifts and far-away vessels
+	--Fix a harmless warning in log
+ 
 v3.8.5
 
 	--Add delay to creating ground joints
