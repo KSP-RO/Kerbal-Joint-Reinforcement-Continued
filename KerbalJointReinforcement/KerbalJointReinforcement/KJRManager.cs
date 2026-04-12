@@ -303,7 +303,7 @@ namespace KerbalJointReinforcement
                     }
                 }
 
-                if (KJRJointUtils.settings.reinforceDecouplersFurther && p.isDecoupler(out _))
+                if (KJRJointUtils.settings.reinforceDecouplersFurther && p.IsDecoupler())
                 {
                     MultiJointReinforceDecoupler(p);
                     continue;
@@ -867,24 +867,15 @@ namespace KerbalJointReinforcement
             if (part.parent == null || part.children.Count == 0)
                 return;
 
-            PartModule decoupler = null;
-            foreach (PartModule m in part.Modules)
+            var decoupler = part.FindModuleImplementing<ModuleDecouplerBase>();
+            if (decoupler == null)
             {
-                if (m is ModuleDecouple)
-                {
-                    decoupler = m;
-                    break;
-                }
-                else if (m is ModuleAnchoredDecoupler)
-                {
-                    decoupler = m;
-                    break;
-                }
+                if (KJRJointUtils.settings.debug)
+                    Debug.LogWarning($"[KJR] No decoupler module found on part {part.partInfo.title}, skipping multi-joint reinforcement.");
+                return;
             }
 
-            if (decoupler is ModuleDecouple md && md.isDecoupled)
-                return;
-            if (decoupler is ModuleAnchoredDecoupler mad && mad.isDecoupled)
+            if (decoupler.isDecoupled)
                 return;
 
             List<Part> childParts = new List<Part>();

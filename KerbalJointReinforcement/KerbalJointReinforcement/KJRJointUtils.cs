@@ -28,6 +28,11 @@ namespace KerbalJointReinforcement
     {
         public static KJRSettings settings;
 
+        public static bool IsDecoupler(this Part p)
+        {
+            return p.FindModuleImplementing<ModuleDecouplerBase>();
+        }
+
         public static bool IsJointAdjustmentValid(Part p)
         {
             for (int i = 0; i < p.Modules.Count; i++)
