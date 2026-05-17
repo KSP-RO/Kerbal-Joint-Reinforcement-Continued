@@ -45,6 +45,17 @@ namespace KerbalJointReinforcement
             return true;
         }
 
+        public static bool HasUnlockedJoint(Part p)
+        {
+            for (int i = 0; i < p.Modules.Count; i++)
+            {
+                if (p.Modules[i] is IJointLockState jls && jls.IsJointUnlocked())
+                    return true;
+            }
+
+            return false;
+        }
+
         public static bool GetsDecouplerStiffeningExtension(Part p)
         {
             foreach (string s in settings.decouplerStiffeningExtensionType)

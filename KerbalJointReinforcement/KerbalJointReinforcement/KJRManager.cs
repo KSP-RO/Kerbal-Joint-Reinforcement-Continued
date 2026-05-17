@@ -34,6 +34,7 @@ namespace KerbalJointReinforcement
         private List<Vessel> updatedVessels;
         private HashSet<Vessel> vesselOffRails;
         private Dictionary<Vessel, List<Joint>> vesselJointStrengthened;
+        private Dictionary<Part, bool> jointLockStates;
         private KJRMultiJointManager multiJointManager;
         private KJRMultiJointManager decouplerJointManager;
         private bool isEVAConstructionModeActive = false;
@@ -55,6 +56,7 @@ namespace KerbalJointReinforcement
             updatedVessels = new List<Vessel>();
             vesselOffRails = new HashSet<Vessel>();
             vesselJointStrengthened = new Dictionary<Vessel, List<Joint>>();
+            jointLockStates = new Dictionary<Part, bool>();
             multiJointManager = new KJRMultiJointManager();
             decouplerJointManager = new KJRMultiJointManager();
         }
@@ -85,6 +87,7 @@ namespace KerbalJointReinforcement
             updatedVessels = null;
             vesselOffRails = null;
             vesselJointStrengthened = null;
+            jointLockStates = null;
 
             multiJointManager.OnDestroy();
             multiJointManager = null;
@@ -244,6 +247,8 @@ namespace KerbalJointReinforcement
                 vesselJointStrengthened.Remove(v);
                 updatedVessels.Remove(v);
             }
+
+            ClearJointLockStates(v);
         }
 
         private void OnSettingsApplied()
@@ -326,6 +331,7 @@ namespace KerbalJointReinforcement
             if (success || !child_parts)
                 updatedVessels.Add(v);
 
+            RefreshJointLockStates(v);
             multiJointManager.ClearTempLists();
             decouplerJointManager.ClearTempLists();
 
@@ -360,7 +366,76 @@ namespace KerbalJointReinforcement
                         vesselOffRails.Remove(v);
                     }
                 }
+
+                MonitorJointLockStateChanges();
             }
+        }
+
+        private void MonitorJointLockStateChanges()
+        {
+            List<Part> changedParts = null;
+
+            for (int i = 0; i < updatedVessels.Count; i++)
+            {
+                Vessel v = updatedVessels[i];
+                if (v == null || v.Parts == null)
+                    continue;
+
+                foreach (Part p in v.Parts)
+                {
+                    if (p == null)
+                        continue;
+
+                    bool isUnlocked = KJRJointUtils.HasUnlockedJoint(p);
+                    if (!jointLockStates.TryGetValue(p, out bool wasUnlocked))
+                    {
+                        jointLockStates[p] = isUnlocked;
+                        continue;
+                    }
+
+                    if (wasUnlocked == isUnlocked)
+                        continue;
+
+                    jointLockStates[p] = isUnlocked;
+
+                    if (KJRJointUtils.settings.debug)
+                        Debug.Log($"[KJR] Joint lock state changed for {p.partInfo.title}: {(isUnlocked ? "unlocked" : "locked")}");
+
+                    if (changedParts == null)
+                        changedParts = new List<Part>();
+                    changedParts.Add(p);
+                }
+            }
+
+            if (changedParts == null)
+                return;
+
+            foreach (Part p in changedParts)
+            {
+                if (p != null)
+                    OnRoboticPartLockChanged(p, !KJRJointUtils.HasUnlockedJoint(p));
+            }
+        }
+
+        private void RefreshJointLockStates(Vessel v)
+        {
+            if (v == null || v.Parts == null)
+                return;
+
+            foreach (Part p in v.Parts)
+            {
+                if (p != null)
+                    jointLockStates[p] = KJRJointUtils.HasUnlockedJoint(p);
+            }
+        }
+
+        private void ClearJointLockStates(Vessel v)
+        {
+            if (v == null || v.Parts == null)
+                return;
+
+            foreach (Part p in v.Parts)
+                jointLockStates.Remove(p);
         }
 
         private void UpdatePartJoint(Part p)
