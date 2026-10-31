@@ -33,6 +33,7 @@ namespace KerbalJointReinforcement
     {
         private List<Vessel> updatedVessels;
         private HashSet<Vessel> vesselOffRails;
+        private HashSet<Vessel> vesselsWaitingToBeReady;
         private KJRMultiJointManager multiJointManager;
         private KJRMultiJointManager decouplerJointManager;
         private bool isEVAConstructionModeActive = false;
@@ -53,6 +54,7 @@ namespace KerbalJointReinforcement
             KJRJointUtils.LoadConstants();
             updatedVessels = new List<Vessel>();
             vesselOffRails = new HashSet<Vessel>();
+            vesselsWaitingToBeReady = new HashSet<Vessel>();
             multiJointManager = new KJRMultiJointManager();
             decouplerJointManager = new KJRMultiJointManager();
         }
@@ -82,6 +84,7 @@ namespace KerbalJointReinforcement
 
             updatedVessels = null;
             vesselOffRails = null;
+            vesselsWaitingToBeReady = null;
 
             multiJointManager.OnDestroy();
             multiJointManager = null;
@@ -109,14 +112,15 @@ namespace KerbalJointReinforcement
             if (v is null || v.isEVA)
                 return;
 
-            if (!v.rootPart.started ||
-                v.protoVessel == null ||                                       // This handles decoupling where the parent part of the decoupler hasn't yet been updated and thus references the part on original vessel
-                v.rootPart.parent != null && v.rootPart.parent.vessel != v)    // Handles a similar case as the check above
+            if (!IsVesselReadyForJointUpdate(v))
             {
                 // Need to guard against this event getting called too early in the vessel lifecycle. 
                 // It can take a few frames before rigidbodies and stock joints are created.
                 if (KJRJointUtils.settings.debug)
                     Debug.Log($"[KJR] OnVesselWasModified called too early for {v.vesselName}: {Environment.StackTrace}");
+
+                if (vesselsWaitingToBeReady.Add(v))
+                    StartCoroutine(OnVesselWasModifiedWhenReady(v));
                 return;
             }
             
@@ -133,6 +137,42 @@ namespace KerbalJointReinforcement
 
             updatedVessels.Remove(v);
             StartCoroutine(RunVesselJointUpdateFunctionWhenSafe(v));
+        }
+
+        private static bool IsVesselReadyForJointUpdate(Vessel v)
+        {
+            return v.rootPart.started &&
+                   v.protoVessel != null &&                                      // This handles decoupling where the parent part of the decoupler hasn't yet been updated and thus references the part on original vessel
+                   (v.rootPart.parent == null || v.rootPart.parent.vessel == v); // Handles a similar case as the check above
+        }
+
+        // A vessel created by decoupling or undocking fires onVesselWasModified before its part tree is updated
+        // and never fires it again. Wait until the vessel is ready so that it still gets its joints.
+        private IEnumerator OnVesselWasModifiedWhenReady(Vessel v)
+        {
+            const int maxFrames = 100;
+            for (int i = 0; i < maxFrames; i++)
+            {
+                yield return null;
+
+                // Packed vessels get processed in OnVesselOffRails once they go off rails
+                if (v == null || v.rootPart == null || v.packed)
+                {
+                    vesselsWaitingToBeReady.Remove(v);
+                    yield break;
+                }
+
+                if (IsVesselReadyForJointUpdate(v))
+                {
+                    vesselsWaitingToBeReady.Remove(v);
+                    OnVesselWasModified(v);
+                    yield break;
+                }
+            }
+
+            vesselsWaitingToBeReady.Remove(v);
+            if (KJRJointUtils.settings.debug)
+                Debug.LogWarning($"[KJR] Vessel {v.vesselName} did not become ready for joint update within {maxFrames} frames");
         }
 
         private IEnumerator RunVesselJointUpdateFunctionWhenSafe(Vessel v)

@@ -113,6 +113,7 @@ v3.8.8
 	--Remove unused config values
 	--Unlocked robotic parts, rotating docking ports and exempt parts no longer block extra joints between parts that are not connected through them
 	--Fix extra joints missing on the remaining vessel after staging, decoupling or undocking
+	--Fix the vessel that separates by staging, decoupling or undocking getting no extra joints
 
 v3.8.7
 
