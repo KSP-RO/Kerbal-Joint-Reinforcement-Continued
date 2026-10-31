@@ -8,8 +8,6 @@
     <bool name="useVolumeNotArea">1</bool>
     <bool name="debug">0</bool>
 
-    <float name="angularMaxForceFactor">-1</float>
-
     <float name="decouplerAndClampJointStrength">-1</float>
 
     <float name="breakForceMultiplier">1</float>
@@ -18,7 +16,6 @@
     <float name="breakTorquePerMOI">6000</float>
 
     <float name="massForAdjustment">0.01</float>
-    <float name="upperMassForLockedJoint">0</float>
 
     <string name="exemptModuleType0">WingManipulator</string>
     <string name="exemptModuleType1">SingleGroupMan</string>

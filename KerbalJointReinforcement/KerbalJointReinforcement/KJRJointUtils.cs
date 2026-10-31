@@ -169,8 +169,6 @@ namespace KerbalJointReinforcement
             if (settings.debug)
             {
                 StringBuilder debugString = new StringBuilder();
-                debugString.AppendLine($"\n\rMax Force Factor: {settings.angularMaxForceFactor}");
-
                 debugString.AppendLine($"\n\rJoint Strength Multipliers: \n\rForce Multiplier: {settings.breakForceMultiplier}\n\rTorque Multiplier: {settings.breakTorqueMultiplier}");
                 debugString.AppendLine("Joint Force Strength Per Unit Area: " + settings.breakStrengthPerArea);
                 debugString.AppendLine("Joint Torque Strength Per Unit MOI: " + settings.breakTorquePerMOI);

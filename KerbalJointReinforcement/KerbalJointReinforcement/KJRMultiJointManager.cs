@@ -204,11 +204,6 @@ namespace KerbalJointReinforcement
             return false;
         }
 
-        public void OnJointBreak(PartJoint partJoint)
-        {
-            OnJointBreak(partJoint.Parent);
-        }
-
         public void OnJointBreak(Part part)
         {
             if (part == null)

@@ -45,15 +45,11 @@ namespace KerbalJointReinforcement
         public bool debug = false;
 
         // The following fields are marked as internal so that the values wouldn't get persisted to the save file
-        internal float angularMaxForceFactor = 0;
-
         internal float breakForceMultiplier = 1;
         internal float breakTorqueMultiplier = 1;
 
         internal float breakStrengthPerArea = 40;
         internal float breakTorquePerMOI = 40000;
-        internal float surfaceAttachAreaMult = 10;
-        internal float surfaceAttachMOIMult = 10;
 
         internal float decouplerAndClampJointStrength = float.PositiveInfinity;
 
@@ -85,10 +81,6 @@ namespace KerbalJointReinforcement
             worldSpaceJoints = config.GetValue(nameof(worldSpaceJoints), true);
             useVolumeNotArea = config.GetValue(nameof(useVolumeNotArea), true);
             debug = config.GetValue(nameof(debug), false);
-
-            angularMaxForceFactor = config.GetValue(nameof(angularMaxForceFactor), angularMaxForceFactor);
-            if (angularMaxForceFactor < 0)
-                angularMaxForceFactor = float.MaxValue;
 
             breakForceMultiplier = config.GetValue(nameof(breakForceMultiplier), breakForceMultiplier);
             breakTorqueMultiplier = config.GetValue(nameof(breakTorqueMultiplier), breakTorqueMultiplier);

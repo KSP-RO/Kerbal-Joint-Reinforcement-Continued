@@ -33,7 +33,6 @@ namespace KerbalJointReinforcement
     {
         private List<Vessel> updatedVessels;
         private HashSet<Vessel> vesselOffRails;
-        private Dictionary<Vessel, List<Joint>> vesselJointStrengthened;
         private KJRMultiJointManager multiJointManager;
         private KJRMultiJointManager decouplerJointManager;
         private bool isEVAConstructionModeActive = false;
@@ -54,7 +53,6 @@ namespace KerbalJointReinforcement
             KJRJointUtils.LoadConstants();
             updatedVessels = new List<Vessel>();
             vesselOffRails = new HashSet<Vessel>();
-            vesselJointStrengthened = new Dictionary<Vessel, List<Joint>>();
             multiJointManager = new KJRMultiJointManager();
             decouplerJointManager = new KJRMultiJointManager();
         }
@@ -84,7 +82,6 @@ namespace KerbalJointReinforcement
 
             updatedVessels = null;
             vesselOffRails = null;
-            vesselJointStrengthened = null;
 
             multiJointManager.OnDestroy();
             multiJointManager = null;
@@ -241,7 +238,6 @@ namespace KerbalJointReinforcement
                 }
 
                 DestroyAllExtraJoints(v);
-                vesselJointStrengthened.Remove(v);
                 updatedVessels.Remove(v);
             }
         }
