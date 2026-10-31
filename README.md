@@ -112,6 +112,7 @@ v3.8.8
 	--Fix the "Calculate by area" setting label; the setting calculates by volume
 	--Remove unused config values
 	--Unlocked robotic parts, rotating docking ports and exempt parts no longer block extra joints between parts that are not connected through them
+	--Fix extra joints missing on the remaining vessel after staging, decoupling or undocking
 
 v3.8.7
 

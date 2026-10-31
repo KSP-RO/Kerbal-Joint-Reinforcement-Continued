@@ -31,6 +31,8 @@ namespace KerbalJointReinforcement
         private List<Part> linkPart1List;
         private List<Part> linkPart2List;
         private HashSet<Part> linkedSet;
+        //Destroy() only removes a joint at the end of the frame. Joints waiting for that are kept here so they do not count as existing joints in the meantime.
+        private HashSet<ConfigurableJoint> destroyedJoints;
 
         public KJRMultiJointManager()
         {
@@ -38,6 +40,7 @@ namespace KerbalJointReinforcement
             linkPart1List = new List<Part>();
             linkPart2List = new List<Part>();
             linkedSet = new HashSet<Part>();
+            destroyedJoints = new HashSet<ConfigurableJoint>();
             GameEvents.onVesselCreate.Add(VesselCreate);
             GameEvents.onPartUndock.Add(OnJointBreak);
             GameEvents.onPartDie.Add(OnJointBreak);
@@ -143,7 +146,7 @@ namespace KerbalJointReinforcement
                 for (int i = configJointList.Count - 1; i >= 0; --i)
                 {
                     ConfigurableJoint joint = configJointList[i];
-                    if (joint == null)
+                    if (IsJointGone(joint))
                         configJointList.RemoveAt(i);
 
                     alreadyExists |= joint == multiJoint;
@@ -175,7 +178,7 @@ namespace KerbalJointReinforcement
             for (int i = 0; i < testMultiJoints.Count; i++)
             {
                 ConfigurableJoint joint = testMultiJoints[i];
-                if (joint == null)
+                if (IsJointGone(joint))
                 {
                     testMultiJoints.RemoveAt(i);
                     --i;
@@ -198,9 +201,10 @@ namespace KerbalJointReinforcement
                 for(int i = 0; i < configJointList.Count; i++)
                 {
                     ConfigurableJoint joint = configJointList[i];
-                    if (joint != null)
+                    if (!IsJointGone(joint))
                     {
                         GameObject.Destroy(joint);
+                        destroyedJoints.Add(joint);
                     }
                 }
 
@@ -213,6 +217,14 @@ namespace KerbalJointReinforcement
             linkPart1List.Clear();
             linkPart2List.Clear();
             linkedSet.Clear();
+
+            //Joints that Unity has finished destroying compare equal to null and no longer need to be tracked
+            destroyedJoints.RemoveWhere(j => j == null);
+        }
+
+        private bool IsJointGone(ConfigurableJoint joint)
+        {
+            return joint == null || destroyedJoints.Contains(joint);
         }
     }
 }
