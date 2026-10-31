@@ -975,13 +975,15 @@ namespace KerbalJointReinforcement
             for (int i = 0; i < childPartsToConnect.Count; ++i)
             {
                 Part p = childPartsToConnect[i];
-                Part linkPart = childPartsToConnect[i + 1 >= childPartsToConnect.Count ? 0 : i + 1];
-
-                Rigidbody rigidBody = linkPart.Rigidbody;
-                if (!p.rb || !rigidBody || p.rb == rigidBody)
+                if (!p.rb)
                     continue;
 
-                if (!multiJointManager.CheckMultiJointBetweenParts(p, linkPart) && multiJointManager.TrySetValidLinkedSet(p, linkPart))
+                Part linkPart = childPartsToConnect[i + 1 >= childPartsToConnect.Count ? 0 : i + 1];
+                Rigidbody rigidBody = linkPart.Rigidbody;
+
+                // With only one leaf, linkPart and linkPart2 are p itself; skip those joints but still connect p to root
+                if (rigidBody && p.rb != rigidBody &&
+                    !multiJointManager.CheckMultiJointBetweenParts(p, linkPart) && multiJointManager.TrySetValidLinkedSet(p, linkPart))
                 {
                     ConfigurableJoint betweenChildJoint = p.gameObject.AddComponent<ConfigurableJoint>();
 
@@ -1007,10 +1009,8 @@ namespace KerbalJointReinforcement
                 Part linkPart2 = childPartsToConnect[part2Index];
                 rigidBody = linkPart2.Rigidbody;
 
-                if (!p.rb || !rigidBody || p.rb == rigidBody)
-                    continue;
-
-                if (!multiJointManager.CheckMultiJointBetweenParts(p, linkPart2) && multiJointManager.TrySetValidLinkedSet(p, linkPart2))
+                if (rigidBody && p.rb != rigidBody &&
+                    !multiJointManager.CheckMultiJointBetweenParts(p, linkPart2) && multiJointManager.TrySetValidLinkedSet(p, linkPart2))
                 {
                     ConfigurableJoint betweenChildJoint2 = p.gameObject.AddComponent<ConfigurableJoint>();
 

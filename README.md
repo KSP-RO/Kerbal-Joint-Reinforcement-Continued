@@ -116,6 +116,7 @@ Decoupler Stiffening Extension Types
 v3.8.8
 
 	--Fix an error when processing stack-attached parts that have no attach node and no measurable size
+	--Connect the leaf part to the root on vessels that have only one leaf part
 
 v3.8.7
 
