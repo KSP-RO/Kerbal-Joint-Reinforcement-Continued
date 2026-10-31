@@ -36,7 +36,7 @@ namespace KerbalJointReinforcement
             toolTip = "Connects the heaviest parts of the vessel directly to ground if it is waiting to be launched and has launch clamps")]
         public bool worldSpaceJoints = true;
 
-        [GameParameters.CustomParameterUI("Calculate by area", autoPersistance = false,
+        [GameParameters.CustomParameterUI("Calculate by volume", autoPersistance = false,
             toolTip = "Switches to calculating connection area based on volume, not area; not technically correct, but allows a better approximation of very large rockets")]
         public bool useVolumeNotArea = true;
 
