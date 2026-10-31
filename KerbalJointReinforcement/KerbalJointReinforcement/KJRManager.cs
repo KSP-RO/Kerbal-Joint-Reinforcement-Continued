@@ -601,7 +601,7 @@ namespace KerbalJointReinforcement
                 {
                     radius = Mathf.Min(KJRJointUtils.CalculateRadius(p, Vector3.up), KJRJointUtils.CalculateRadius(connectedPart, Vector3.up));
                     if (radius <= 0.001)
-                        radius = node.size * 1.25f;
+                        radius = 1.25f;     // No node to read the size from, so assume a size 1 node
                     area = Mathf.PI * radius * radius;                      //Area of cylinder
                     momentOfInertia = area * radius * radius / 4;           //Moment of Inertia of cylinder
                 }

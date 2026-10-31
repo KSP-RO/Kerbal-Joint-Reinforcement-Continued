@@ -113,6 +113,10 @@ Decoupler Stiffening Extension Types
 ****** CHANGELOG ******
 ***********************
 
+v3.8.8
+
+	--Fix an error when processing stack-attached parts that have no attach node and no measurable size
+
 v3.8.7
 
 	--Fix issues with decoupler checks and reinforcement
