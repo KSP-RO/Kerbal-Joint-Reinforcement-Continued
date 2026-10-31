@@ -111,6 +111,7 @@ v3.8.8
 	--Connect the leaf part to the root on vessels that have only one leaf part
 	--Fix the "Calculate by area" setting label; the setting calculates by volume
 	--Remove unused config values
+	--Unlocked robotic parts, rotating docking ports and exempt parts no longer block extra joints between parts that are not connected through them
 
 v3.8.7
 

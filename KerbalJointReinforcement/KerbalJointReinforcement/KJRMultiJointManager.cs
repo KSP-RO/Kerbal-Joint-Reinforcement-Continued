@@ -92,53 +92,37 @@ namespace KerbalJointReinforcement
                 linkPart2List.Add(linkPart2);
             }
 
-            int index1, index2;
-            index1 = linkPart1List.Count - 1;
-            index2 = linkPart2List.Count - 1;
-            bool reachedMergeNode = false;
+            //Due to the way the lists were created, index 0 = connected part, while index = Count - 1 = root part
+            int index1 = linkPart1List.Count - 1;
+            int index2 = linkPart2List.Count - 1;
 
-            //Start iterating through the lists, starting from the last indices.  Due to the way the lists were created, index 0 = connected part, while index = Count - 1 = root part
-            while (true)
+            //Parts that do not share a root are not in the same part tree and cannot be linked
+            if (linkPart1List[index1] != linkPart2List[index2])
+                return false;
+
+            //Walk down from the root while both lines still go through the same part. The last shared part is where the lines merge.
+            while (index1 > 0 && index2 > 0 && linkPart1List[index1 - 1] == linkPart2List[index2 - 1])
             {
-                Part p = null, q = null;
-
-                //if the indices are valid, get those particular parts
-                if (index1 >= 0)
-                    p = linkPart1List[index1];
-                if (index2 >= 0)
-                    q = linkPart2List[index2];
-
-                //decrement indices for next iteration
                 index1--;
                 index2--;
+            }
 
-                //if p and q are the same, this is the merge we care about; set variable noting this now
-                if (p == q)
-                    reachedMergeNode = true;
+            //Only the parts from each connected part up to and including the merge part are crossed by the joint.
+            //Parts above the merge part move together with both connected parts, so they do not affect the joint.
+            for (int i = 0; i <= index1; i++)
+            {
+                Part p = linkPart1List[i];
+                if (!KJRJointUtils.IsJointAdjustmentValid(p))
+                    return false;
+                linkedSet.Add(p);
+            }
 
-                //if we haven't reached the merge yet, go back to the beginning of the loop
-                if (!reachedMergeNode)
-                    continue;
-
-                //if we have reached the merge, all the remaining parts are parts of the line connecting these parts and should be set to be disconnected
-                if (!(p is null))
-                {
-                    if (KJRJointUtils.IsJointAdjustmentValid(p))
-                        linkedSet.Add(p);
-                    else
-                        return false;
-                }
-                if (!(q is null))
-                {
-                    if (KJRJointUtils.IsJointAdjustmentValid(q))
-                        linkedSet.Add(q);
-                    else
-                        return false;
-                }
-
-                //if both p and q are null, that means we've reached the end of both lines and so all the parts have been added
-                if (p is null && q is null)
-                    break;
+            for (int i = 0; i <= index2; i++)
+            {
+                Part q = linkPart2List[i];
+                if (!KJRJointUtils.IsJointAdjustmentValid(q))
+                    return false;
+                linkedSet.Add(q);
             }
 
             return true;
