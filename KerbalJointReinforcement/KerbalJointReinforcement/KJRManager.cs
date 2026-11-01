@@ -31,8 +31,12 @@ namespace KerbalJointReinforcement
     [KSPAddon(KSPAddon.Startup.Flight, false)]
     public class KJRManager : MonoBehaviour
     {
+        // Stock starts physics easing one physics step after the vessel goes off rails, so keep the protection at least this long
+        private const float MinLoadProtectionTime = 0.1f;
+
         private List<Vessel> updatedVessels;
-        private HashSet<Vessel> vesselOffRails;
+        // Vessels that have load protection active, with the time it was applied
+        private Dictionary<Vessel, float> vesselOffRails;
         private HashSet<Vessel> vesselsWaitingToBeReady;
         // Stock rebuilds attach joints when it re-roots a vessel on docking and undocking, and in EVA construction.
         // Tracking the joint instances instead of the parts makes sure that rebuilt joints get processed again.
@@ -59,7 +63,7 @@ namespace KerbalJointReinforcement
         {
             KJRJointUtils.LoadConstants();
             updatedVessels = new List<Vessel>();
-            vesselOffRails = new HashSet<Vessel>();
+            vesselOffRails = new Dictionary<Vessel, float>();
             vesselsWaitingToBeReady = new HashSet<Vessel>();
             processedAttachJoints = new HashSet<PartJoint>();
             attachJointStrengths = new Dictionary<PartJoint, Vector2>();
@@ -222,10 +226,10 @@ namespace KerbalJointReinforcement
                 Debug.Log("[KJR] OnVesselOffRails " + v.vesselName);
 
             RunVesselJointUpdateFunction(v);
-            if (!vesselOffRails.Contains(v) && v.precalc.isEasingGravity)
+            if (!vesselOffRails.ContainsKey(v))
             {
                 Debug.Log("[KJR] easing " + v.vesselName);
-                vesselOffRails.Add(v);
+                vesselOffRails[v] = Time.fixedTime;
                 for (int i = 0; i < v.Parts.Count; ++i)
                 {
                     Part p = v.Parts[i];
@@ -279,7 +283,7 @@ namespace KerbalJointReinforcement
 
             if (updatedVessels.Contains(v))
             {
-                if (vesselOffRails.Contains(v))
+                if (vesselOffRails.ContainsKey(v))
                 {
                     foreach (Part p in v.Parts)
                     {
@@ -420,10 +424,10 @@ namespace KerbalJointReinforcement
                 for(int i = 0; i < updatedVessels.Count; ++i)
                 {
                     Vessel v = updatedVessels[i];
-                    if (v == null || !vesselOffRails.Contains(v))
+                    if (v == null || !vesselOffRails.TryGetValue(v, out float protectedSince))
                         continue;
 
-                    if (!v.precalc.isEasingGravity)
+                    if (!v.precalc.isEasingGravity && Time.fixedTime - protectedSince >= MinLoadProtectionTime)
                     {
                         foreach (Part p in v.Parts)
                         {
