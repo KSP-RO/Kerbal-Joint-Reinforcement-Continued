@@ -1166,7 +1166,8 @@ namespace KerbalJointReinforcement
             {
                 foreach (LineRenderer r in jointRenderers)
                 {
-                    Destroy(r.gameObject);
+                    if (r != null)
+                        Destroy(r.gameObject);
                 }
             }
 
@@ -1286,7 +1287,9 @@ namespace KerbalJointReinforcement
             {
                 foreach (var r in jointRenderers)
                 {
-                    Destroy(r.gameObject);
+                    // Scene unload can destroy the renderers before this runs
+                    if (r != null)
+                        Destroy(r.gameObject);
                 }
                 jointRenderers = null;
             }

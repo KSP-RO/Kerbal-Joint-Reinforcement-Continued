@@ -116,6 +116,7 @@ v3.8.8
 	--Fix the vessel that separates by staging, decoupling or undocking getting no extra joints
 	--Fix joints that stock rebuilds on docking, undocking and EVA construction staying at stock strength
 	--Fix attach joint stiffening never taking effect because stock reset it right away
+	--Fix an error in log when leaving flight with debug enabled
 
 v3.8.7
 
