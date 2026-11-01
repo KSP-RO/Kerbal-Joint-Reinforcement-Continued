@@ -224,7 +224,7 @@ namespace KerbalJointReinforcement
             destroyedJoints.RemoveWhere(j => j == null);
         }
 
-        private bool IsJointGone(ConfigurableJoint joint)
+        internal bool IsJointGone(ConfigurableJoint joint)
         {
             return joint == null || destroyedJoints.Contains(joint);
         }
