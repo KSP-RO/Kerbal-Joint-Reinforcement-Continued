@@ -37,6 +37,7 @@ namespace KerbalJointReinforcement
         // Stock rebuilds attach joints when it re-roots a vessel on docking and undocking, and in EVA construction.
         // Tracking the joint instances instead of the parts makes sure that rebuilt joints get processed again.
         private HashSet<PartJoint> processedAttachJoints;
+        private Dictionary<PartJoint, Vector2> attachJointStrengths;    // x = break force, y = break torque
         private KJRMultiJointManager multiJointManager;
         private KJRMultiJointManager decouplerJointManager;
         private bool isEVAConstructionModeActive = false;
@@ -59,6 +60,7 @@ namespace KerbalJointReinforcement
             vesselOffRails = new HashSet<Vessel>();
             vesselsWaitingToBeReady = new HashSet<Vessel>();
             processedAttachJoints = new HashSet<PartJoint>();
+            attachJointStrengths = new Dictionary<PartJoint, Vector2>();
             multiJointManager = new KJRMultiJointManager();
             decouplerJointManager = new KJRMultiJointManager();
         }
@@ -73,6 +75,7 @@ namespace KerbalJointReinforcement
             GameEvents.onRoboticPartLockChanged.Add(OnRoboticPartLockChanged);
             GameEvents.OnEVAConstructionModePartDetached.Add(OnEVAConstructionModePartDetached);
             GameEvents.OnEVAConstructionMode.Add(OnEVAConstructionMode);
+            GameEvents.onPartJointSet.Add(OnPartJointSet);
         }
 
         public void OnDestroy()
@@ -85,11 +88,13 @@ namespace KerbalJointReinforcement
             GameEvents.onRoboticPartLockChanged.Remove(OnRoboticPartLockChanged);
             GameEvents.OnEVAConstructionModePartDetached.Remove(OnEVAConstructionModePartDetached);
             GameEvents.OnEVAConstructionMode.Remove(OnEVAConstructionMode);
+            GameEvents.onPartJointSet.Remove(OnPartJointSet);
 
             updatedVessels = null;
             vesselOffRails = null;
             vesselsWaitingToBeReady = null;
             processedAttachJoints = null;
+            attachJointStrengths = null;
 
             multiJointManager.OnDestroy();
             multiJointManager = null;
@@ -314,6 +319,14 @@ namespace KerbalJointReinforcement
             isEVAConstructionModeActive = active;
         }
 
+        // Stock PartJoint.SetUnbreakable writes stock drives and limits back onto the joints.
+        // It runs on pack, unpack, physics easing and rigid attachment changes, so reapply ours right away.
+        private void OnPartJointSet(PartJoint partJoint)
+        {
+            if (attachJointStrengths.TryGetValue(partJoint, out Vector2 strength))
+                ApplyJointParameters(partJoint, strength.x, strength.y);
+        }
+
         private void RunVesselJointUpdateFunction(Vessel v)
         {
             Profiler.BeginSample("KJR-RunVesselJointUpdateFunction");
@@ -325,6 +338,15 @@ namespace KerbalJointReinforcement
             }
 
             processedAttachJoints.RemoveWhere(j => j == null);
+
+            var destroyedJoints = new List<PartJoint>();
+            foreach (PartJoint pj in attachJointStrengths.Keys)
+            {
+                if (pj == null)
+                    destroyedJoints.Add(pj);
+            }
+            foreach (PartJoint pj in destroyedJoints)
+                attachJointStrengths.Remove(pj);
 
             bool shouldProcessClamps = v.LandedOrSplashed && (KJRJointUtils.settings.worldSpaceJoints || KJRJointUtils.settings.reinforceLaunchClampsFurther);
             bool child_parts = false;
@@ -683,35 +705,13 @@ namespace KerbalJointReinforcement
                 breakForce = Mathf.Max(KJRJointUtils.settings.breakStrengthPerArea * area, breakForce);
                 breakTorque = Mathf.Max(KJRJointUtils.settings.breakTorquePerMOI * momentOfInertia, breakTorque);
 
-                JointDrive angDrive = j.angularXDrive;
-                angDrive.maximumForce = breakTorque;
-                j.angularXDrive = j.angularYZDrive = j.slerpDrive = angDrive;
-
-                JointDrive linDrive = j.xDrive;
-                linDrive.maximumForce = breakForce;
-                j.xDrive = j.yDrive = j.zDrive = linDrive;
-
-                SoftJointLimit lim = new SoftJointLimit();
-                lim.limit = 0;
-                lim.bounciness = 0;
-
-                SoftJointLimitSpring limSpring = new SoftJointLimitSpring();
-                limSpring.spring = 0;
-                limSpring.damper = 0;
-
-                j.linearLimit = j.angularYLimit = j.angularZLimit = j.lowAngularXLimit = j.highAngularXLimit = lim;
-                j.linearLimitSpring = j.angularYZLimitSpring = j.angularXLimitSpring = limSpring;
-
-                j.targetAngularVelocity = Vector3.zero;
-                j.targetVelocity = Vector3.zero;
-                j.targetRotation = Quaternion.identity;
-                j.targetPosition = Vector3.zero;
-
                 j.breakForce = breakForce;
                 j.breakTorque = breakTorque;
                 p.attachJoint.SetBreakingForces(j.breakForce, j.breakTorque);
 
                 processedAttachJoints.Add(p.attachJoint);
+                attachJointStrengths[p.attachJoint] = new Vector2(breakForce, breakTorque);
+                ApplyJointParameters(p.attachJoint, breakForce, breakTorque);
 
                 if (addAdditionalJointToParent && p.parent.parent != null)
                 {
@@ -792,7 +792,7 @@ namespace KerbalJointReinforcement
                         newJoint.yDrive = j.yDrive;
                         newJoint.zDrive = j.zDrive;
 
-                        newJoint.linearLimit = newJoint.angularYLimit = newJoint.angularZLimit = newJoint.lowAngularXLimit = newJoint.highAngularXLimit = lim;
+                        newJoint.linearLimit = newJoint.angularYLimit = newJoint.angularZLimit = newJoint.lowAngularXLimit = newJoint.highAngularXLimit = j.linearLimit;
 
                         /*newJoint.targetAngularVelocity = Vector3.zero;
                         newJoint.targetVelocity = Vector3.zero;
@@ -888,9 +888,9 @@ namespace KerbalJointReinforcement
                     debugString.AppendLine("Joint Motion Locked: " + Convert.ToString(p.attachJoint.Joint.xMotion == ConfigurableJointMotion.Locked));
 
                     debugString.AppendLine("Angular Drive");
-                    debugString.AppendLine("Position Spring: " + angDrive.positionSpring);
-                    debugString.AppendLine("Position Damper: " + angDrive.positionDamper);
-                    debugString.AppendLine("Max Force: " + angDrive.maximumForce);
+                    debugString.AppendLine("Position Spring: " + j.angularXDrive.positionSpring);
+                    debugString.AppendLine("Position Damper: " + j.angularXDrive.positionDamper);
+                    debugString.AppendLine("Max Force: " + j.angularXDrive.maximumForce);
                     debugString.AppendLine("");
 
                     debugString.AppendLine("Cross Section Properties");
@@ -903,6 +903,44 @@ namespace KerbalJointReinforcement
 
             if (KJRJointUtils.settings.debug)
                 Debug.Log(debugString.ToString());
+        }
+
+        // Zero limits lock the joint in the pose it had when stock created it.
+        // Must run in the same frame as any stock reset, otherwise a sagged joint snaps back.
+        private static void ApplyJointParameters(PartJoint partJoint, float breakForce, float breakTorque)
+        {
+            SoftJointLimit lim = new SoftJointLimit();
+            lim.limit = 0;
+            lim.bounciness = 0;
+
+            SoftJointLimitSpring limSpring = new SoftJointLimitSpring();
+            limSpring.spring = 0;
+            limSpring.damper = 0;
+
+            foreach (ConfigurableJoint j in partJoint.joints)
+            {
+                if (j == null)
+                    continue;
+
+                JointDrive angDrive = j.angularXDrive;
+                angDrive.maximumForce = breakTorque;
+                j.angularXDrive = j.angularYZDrive = j.slerpDrive = angDrive;
+
+                JointDrive linDrive = j.xDrive;
+                linDrive.maximumForce = breakForce;
+                j.xDrive = j.yDrive = j.zDrive = linDrive;
+
+                j.linearLimit = j.angularYLimit = j.angularZLimit = lim;
+                // Unity keeps the high limit at or above the low one, so the low limit has to be set first
+                j.lowAngularXLimit = lim;
+                j.highAngularXLimit = lim;
+                j.linearLimitSpring = j.angularYZLimitSpring = j.angularXLimitSpring = limSpring;
+
+                j.targetAngularVelocity = Vector3.zero;
+                j.targetVelocity = Vector3.zero;
+                j.targetRotation = Quaternion.identity;
+                j.targetPosition = Vector3.zero;
+            }
         }
 
         public void MultiJointReinforceDecoupler(Part part)
