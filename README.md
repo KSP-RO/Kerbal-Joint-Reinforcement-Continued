@@ -105,7 +105,7 @@ Decoupler Stiffening Extension Types
 ****** CHANGELOG ******
 ***********************
 
-v3.8.8
+v3.9.0
 
 	--Fix an error when processing stack-attached parts that have no attach node and no measurable size
 	--Connect the leaf part to the root on vessels that have only one leaf part
@@ -117,6 +117,7 @@ v3.8.8
 	--Fix joints that stock rebuilds on docking, undocking and EVA construction staying at stock strength
 	--Fix attach joint stiffening never taking effect because stock reset it right away
 	--Fix an error in log when leaving flight with debug enabled
+	--Attach joints give way a little under load spikes instead of breaking
 	--Fix load protection sometimes not applying when a vessel comes off rails
 	--Fix extra joints between a part and its grandparent not coming back after time warp, staging or part loss
 	--Fix extra joints getting skipped because another extra joint passed through the same part

@@ -33,6 +33,8 @@ namespace KerbalJointReinforcement
     {
         // Stock starts physics easing one physics step after the vessel goes off rails, so keep the protection at least this long
         private const float MinLoadProtectionTime = 0.1f;
+        // Share of the real break force that the attach joint drives can push back with before they give way
+        private const float DriveYieldFraction = 0.5f;
 
         private List<Vessel> updatedVessels;
         // Vessels that have load protection active, with the time it was applied
@@ -886,8 +888,9 @@ namespace KerbalJointReinforcement
                     newJoint.angularXMotion = newJoint.angularYMotion = newJoint.angularZMotion = ConfigurableJointMotion.Locked;
                 }*/
 
-                newJoint.breakForce = breakForce;
-                newJoint.breakTorque = breakTorque;
+                // Same strength as the attach joint, so that the copied drives give way before this joint breaks
+                newJoint.breakForce = breakForce * PhysicsGlobals.JointBreakForceFactor;
+                newJoint.breakTorque = breakTorque * PhysicsGlobals.JointBreakTorqueFactor;
 
                 //jointList.Add(newJoint);
                 for (int k = 0; k < partsCrossed.Count; k++)
@@ -945,17 +948,13 @@ namespace KerbalJointReinforcement
             }*/
         }
 
-        // Zero limits lock the joint in the pose it had when stock created it.
-        // Must run in the same frame as any stock reset, otherwise a sagged joint snaps back.
+        // Drives as stiff as the stock linear drive keep the joint rigid under normal loads.
+        // Their force is capped below the break threshold, so a load spike makes the joint give a little instead of breaking it.
+        // Stock limits stay in place and only stop the joint once it has given way that far.
         private static void ApplyJointParameters(PartJoint partJoint, float breakForce, float breakTorque)
         {
-            SoftJointLimit lim = new SoftJointLimit();
-            lim.limit = 0;
-            lim.bounciness = 0;
-
-            SoftJointLimitSpring limSpring = new SoftJointLimitSpring();
-            limSpring.spring = 0;
-            limSpring.damper = 0;
+            float maxForce = breakForce * PhysicsGlobals.JointBreakForceFactor * DriveYieldFraction;
+            float maxTorque = breakTorque * PhysicsGlobals.JointBreakTorqueFactor * DriveYieldFraction;
 
             foreach (ConfigurableJoint j in partJoint.joints)
             {
@@ -963,18 +962,13 @@ namespace KerbalJointReinforcement
                     continue;
 
                 JointDrive angDrive = j.angularXDrive;
-                angDrive.maximumForce = breakTorque;
+                angDrive.positionSpring = PhysicsGlobals.JointForce;
+                angDrive.maximumForce = maxTorque;
                 j.angularXDrive = j.angularYZDrive = j.slerpDrive = angDrive;
 
                 JointDrive linDrive = j.xDrive;
-                linDrive.maximumForce = breakForce;
+                linDrive.maximumForce = maxForce;
                 j.xDrive = j.yDrive = j.zDrive = linDrive;
-
-                j.linearLimit = j.angularYLimit = j.angularZLimit = lim;
-                // Unity keeps the high limit at or above the low one, so the low limit has to be set first
-                j.lowAngularXLimit = lim;
-                j.highAngularXLimit = lim;
-                j.linearLimitSpring = j.angularYZLimitSpring = j.angularXLimitSpring = limSpring;
 
                 j.targetAngularVelocity = Vector3.zero;
                 j.targetVelocity = Vector3.zero;
