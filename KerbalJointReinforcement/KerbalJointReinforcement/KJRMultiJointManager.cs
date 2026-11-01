@@ -184,7 +184,9 @@ namespace KerbalJointReinforcement
                     --i;
                     continue;
                 }
-                if (joint.connectedBody == testRb || joint.gameObject == testPart2.gameObject)
+                // Joints that pass through testPart1 are registered on it too, so only count the ones that have it at one end
+                if ((joint.gameObject == testPart1.gameObject && joint.connectedBody == testRb) ||
+                    (joint.gameObject == testPart2.gameObject && joint.connectedBody == testPart1.rb))
                     return true;
             }
 
