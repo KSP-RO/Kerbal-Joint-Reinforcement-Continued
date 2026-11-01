@@ -34,6 +34,9 @@ namespace KerbalJointReinforcement
         private List<Vessel> updatedVessels;
         private HashSet<Vessel> vesselOffRails;
         private HashSet<Vessel> vesselsWaitingToBeReady;
+        // Stock rebuilds attach joints when it re-roots a vessel on docking and undocking, and in EVA construction.
+        // Tracking the joint instances instead of the parts makes sure that rebuilt joints get processed again.
+        private HashSet<PartJoint> processedAttachJoints;
         private KJRMultiJointManager multiJointManager;
         private KJRMultiJointManager decouplerJointManager;
         private bool isEVAConstructionModeActive = false;
@@ -55,6 +58,7 @@ namespace KerbalJointReinforcement
             updatedVessels = new List<Vessel>();
             vesselOffRails = new HashSet<Vessel>();
             vesselsWaitingToBeReady = new HashSet<Vessel>();
+            processedAttachJoints = new HashSet<PartJoint>();
             multiJointManager = new KJRMultiJointManager();
             decouplerJointManager = new KJRMultiJointManager();
         }
@@ -85,6 +89,7 @@ namespace KerbalJointReinforcement
             updatedVessels = null;
             vesselOffRails = null;
             vesselsWaitingToBeReady = null;
+            processedAttachJoints = null;
 
             multiJointManager.OnDestroy();
             multiJointManager = null;
@@ -319,6 +324,8 @@ namespace KerbalJointReinforcement
                 Debug.Log($"[KJR] Processing vessel {v.id} ({v.GetName()}); root {v.rootPart.partInfo.name} ({v.rootPart.flightID})");
             }
 
+            processedAttachJoints.RemoveWhere(j => j == null);
+
             bool shouldProcessClamps = v.LandedOrSplashed && (KJRJointUtils.settings.worldSpaceJoints || KJRJointUtils.settings.reinforceLaunchClampsFurther);
             bool child_parts = false;
             bool success = false;
@@ -404,7 +411,7 @@ namespace KerbalJointReinforcement
             if (!KJRJointUtils.IsJointAdjustmentValid(p) || p.rb == null || p.attachJoint == null)
                 return;
 
-            if (p.attachMethod == AttachNodeMethod.LOCKED_JOINT)
+            if (processedAttachJoints.Contains(p.attachJoint))
             {
                 if (KJRJointUtils.settings.debug)
                 {
@@ -443,7 +450,7 @@ namespace KerbalJointReinforcement
                         j.breakTorque = KJRJointUtils.settings.decouplerAndClampJointStrength;
                     }
 
-                    p.attachMethod = AttachNodeMethod.LOCKED_JOINT;
+                    processedAttachJoints.Add(p.attachJoint);
                 }
             }
 
@@ -704,7 +711,7 @@ namespace KerbalJointReinforcement
                 j.breakTorque = breakTorque;
                 p.attachJoint.SetBreakingForces(j.breakForce, j.breakTorque);
 
-                p.attachMethod = AttachNodeMethod.LOCKED_JOINT;
+                processedAttachJoints.Add(p.attachJoint);
 
                 if (addAdditionalJointToParent && p.parent.parent != null)
                 {
